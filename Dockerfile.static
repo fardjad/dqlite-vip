@@ -1,0 +1,61 @@
+# syntax=docker/dockerfile:1
+
+FROM ghcr.io/makedeb/makedeb:ubuntu-latest AS just-builder
+
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    cargo && \
+    sudo rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://mpr.makedeb.org/just && \
+    cd just && \
+    makedeb
+
+RUN sudo mkdir -p /build && \
+    sudo chown -R $(id -u):$(id -g) /build && \
+    cp just/just_*.deb /build/just.deb
+
+FROM ubuntu:noble AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    automake \
+    libtool \
+    gettext \
+    autopoint \ 
+    tclsh \
+    tcl \
+    libsqlite3-dev \
+    pkg-config \
+    git \
+    software-properties-common \
+    apt-utils && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN add-apt-repository ppa:longsleep/golang-backports && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends golang-go && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=just-builder /build/just.deb /tmp/just.deb
+RUN dpkg -i /tmp/just.deb
+
+RUN mkdir -p /build
+WORKDIR /build
+
+COPY ./hack/deps.sh ./hack/deps.sh
+COPY ./hack/env.sh ./hack/env.sh
+COPY ./hack/static-dqlite.sh ./hack/static-dqlite.sh
+RUN ./hack/static-dqlite.sh
+
+COPY ./go.mod ./go.sum ./
+RUN go mod download
+
+COPY . ./
+RUN just build-static
+
+FROM scratch
+
+COPY --from=builder /build/bin/static/dqlite-vip /usr/local/bin/dqlite-vip
+CMD ["/usr/local/bin/dqlite-vip"]
