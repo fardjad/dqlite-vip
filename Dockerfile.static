@@ -1,45 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM ghcr.io/makedeb/makedeb:ubuntu-latest AS just-builder
-
-RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-    build-essential \
-    git \
-    cargo && \
-    sudo rm -rf /var/lib/apt/lists/*
-
-RUN git clone https://mpr.makedeb.org/just && \
-    cd just && \
-    makedeb
-
-RUN sudo mkdir -p /build && \
-    sudo chown -R $(id -u):$(id -g) /build && \
-    cp just/just_*.deb /build/just.deb
-
-FROM ubuntu:noble AS builder
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    automake \
-    libtool \
-    gettext \
-    autopoint \ 
-    tclsh \
-    tcl \
-    libsqlite3-dev \
-    pkg-config \
-    git \
-    software-properties-common \
-    apt-utils && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN add-apt-repository ppa:longsleep/golang-backports && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends golang-go && \
-    rm -rf /var/lib/apt/lists/*
-
-COPY --from=just-builder /build/just.deb /tmp/just.deb
-RUN dpkg -i /tmp/just.deb
+FROM dqlite-vip-base:latest AS builder
 
 RUN mkdir -p /build
 WORKDIR /build

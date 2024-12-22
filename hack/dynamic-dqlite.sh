@@ -4,43 +4,13 @@ DIR="${DIR:=$(realpath `dirname "${0}"`)}"
 
 . "${DIR}/env.sh"
 
-BUILD_DIR="${DIR}/.build/static"
-INSTALL_DIR="${DIR}/.deps/static"
+BUILD_DIR="${DIR}/.build/dynamic"
+INSTALL_DIR="${DIR}/.deps/dynamic"
 mkdir -p "${BUILD_DIR}" "${INSTALL_DIR}" "${INSTALL_DIR}/lib" "${INSTALL_DIR}/include"
 BUILD_DIR="$(realpath "${BUILD_DIR}")"
 INSTALL_DIR="$(realpath "${INSTALL_DIR}")"
 
-export LDFLAGS="-static"
-export CFLAGS=""
-MACHINE_TYPE="$(uname -m)"
-if [ "${MACHINE_TYPE}" = "ppc64le" ]; then
-  MACHINE_TYPE="powerpc64le"
-  export CFLAGS="-mlong-double-64"
-fi
-
 "${DIR}/deps.sh"
-
-# build musl
-if [ ! -f "${INSTALL_DIR}/musl/bin/musl-gcc" ]; then
-  (
-    cd "${BUILD_DIR}"
-    rm -rf musl
-    git clone "${REPO_MUSL}" --depth 1 --branch "${TAG_MUSL}" musl > /dev/null
-    cd musl
-    ./configure --prefix="${INSTALL_DIR}/musl" > /dev/null
-    make -j > /dev/null
-    make -j install > /dev/null || true
-
-    # missing musl header files
-    ln -s "/usr/include/${MACHINE_TYPE}-linux-gnu/sys/queue.h" "${INSTALL_DIR}/musl/include/sys/queue.h" || true
-    ln -s "/usr/include/${MACHINE_TYPE}-linux-gnu/asm" "${INSTALL_DIR}/musl/include/asm" || true
-    ln -s /usr/include/asm-generic "${INSTALL_DIR}/musl/include/asm-generic" || true
-    ln -s /usr/include/linux "${INSTALL_DIR}/musl/include/linux" || true
-  )
-fi
-
-export PATH="${PATH}:${INSTALL_DIR}/musl/bin"
-export CC=musl-gcc
 
 # build libtirpc
 if [ ! -f "${BUILD_DIR}/libtirpc/src/libtirpc.la" ]; then
@@ -51,7 +21,7 @@ if [ ! -f "${BUILD_DIR}/libtirpc/src/libtirpc.la" ]; then
     cd libtirpc
     chmod +x autogen.sh
     ./autogen.sh > /dev/null
-    ./configure --disable-shared --disable-gssapi > /dev/null
+    ./configure --disable-gssapi > /dev/null
     make -j > /dev/null
   )
 fi
@@ -66,11 +36,11 @@ if [ ! -f "${BUILD_DIR}/libnsl/src/libnsl.la" ]; then
     ./autogen.sh > /dev/null
     autoreconf -i > /dev/null
     autoconf > /dev/null
-    ./configure --disable-shared \
-      CFLAGS="${CFLAGS} -I${BUILD_DIR}/libtirpc/tirpc" \
-      LDFLAGS="${LDFLAGS} -L${BUILD_DIR}/libtirpc/src" \
+    ./configure \
+      CFLAGS="-I${BUILD_DIR}/libtirpc/tirpc" \
+      LDFLAGS="-L${BUILD_DIR}/libtirpc/src" \
       TIRPC_CFLAGS="-I${BUILD_DIR}/libtirpc/tirpc" \
-      TIRPC_LIBS="-L${BUILD_DIR}/libtirpc/src" \
+      TIRPC_LIBS="-L${BUILD_DIR}/libtirpc/src -ltirpc" \
       > /dev/null
     make -j > /dev/null
   )
@@ -107,10 +77,9 @@ if [ ! -f "${BUILD_DIR}/sqlite/libsqlite3.la" ]; then
     rm -rf sqlite
     git clone "${REPO_SQLITE}" --depth 1 --branch "${TAG_SQLITE}" > /dev/null
     cd sqlite
-    ./configure --disable-shared --disable-readline \
-      CFLAGS="${CFLAGS} -DSQLITE_ENABLE_DBSTAT_VTAB=1" \
+    ./configure --disable-readline \
       > /dev/null
-    make libsqlite3.la -j BCC="${CC} -g -O2 ${CFLAGS} ${LDFLAGS}" > /dev/null
+    make libsqlite3.la -j > /dev/null
   )
 fi
 
@@ -122,9 +91,9 @@ if [ ! -f "${BUILD_DIR}/dqlite/libdqlite.la" ]; then
     git clone "${REPO_DQLITE}" --depth 1 --branch "${TAG_DQLITE}" > /dev/null
     cd dqlite
     autoreconf -i > /dev/null
-    ./configure --disable-shared --enable-build-raft \
-      CFLAGS="${CFLAGS} -I${BUILD_DIR}/sqlite -I${BUILD_DIR}/libuv/include -I${BUILD_DIR}/lz4/lib -I${INSTALL_DIR}/musl/include -Werror=implicit-function-declaration" \
-      LDFLAGS="${LDFLAGS} -L${BUILD_DIR}/libuv/.libs -L${BUILD_DIR}/lz4/lib -L${BUILD_DIR}/libnsl/src" \
+    ./configure --enable-build-raft \
+      CFLAGS="-I${BUILD_DIR}/sqlite -I${BUILD_DIR}/libuv/include -I${BUILD_DIR}/lz4/lib -Werror=implicit-function-declaration" \
+      LDFLAGS=" -L${BUILD_DIR}/libuv/.libs -L${BUILD_DIR}/lz4/lib -L${BUILD_DIR}/libnsl/src" \
       UV_CFLAGS="-I${BUILD_DIR}/libuv/include" \
       UV_LIBS="-L${BUILD_DIR}/libuv/.libs" \
       SQLITE_CFLAGS="-I${BUILD_DIR}/sqlite" \
@@ -140,10 +109,9 @@ fi
 (
   cd "${BUILD_DIR}"
   cp libuv/.libs/* "${INSTALL_DIR}/lib"
-  cp lz4/lib/*.a "${INSTALL_DIR}/lib"
   cp lz4/lib/*.so* "${INSTALL_DIR}/lib"
-  cp sqlite/.libs/*.a "${INSTALL_DIR}/lib"
-  cp dqlite/.libs/*.a "${INSTALL_DIR}/lib"
+  cp sqlite/.libs/* "${INSTALL_DIR}/lib"
+  cp dqlite/.libs/* "${INSTALL_DIR}/lib"
 )
 
 # collect headers
@@ -155,4 +123,7 @@ fi
 )
 
 export CGO_CFLAGS="-I${INSTALL_DIR}/include"
-export CGO_LDFLAGS="-L${INSTALL_DIR}/lib -luv -ldqlite -llz4 -lsqlite3 -Wl,-z,stack-size=1048576"
+export CGO_LDFLAGS="-L${INSTALL_DIR}/lib -ldqlite -luv -llz4 -lsqlite3 -Wl,-z,stack-size=1048576"
+export LD_LIBRARY_PATH="${INSTALL_DIR}/lib"
+
+echo "Libraries are in '${INSTALL_DIR}/lib'"

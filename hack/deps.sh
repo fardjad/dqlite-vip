@@ -1,3 +1,4 @@
-#!/bin/bash -xeu
+#!/bin/bash -eu
 
-echo "Build dependencies are already installed by the Ansible Playbook!"
+# NOOP
+# Build dependencies are already installed

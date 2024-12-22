@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/canonical/go-dqlite/v2 v2.0.0
-	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1
+	golang.org/x/sys v0.28.0
 )
 
 require (

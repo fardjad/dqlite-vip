@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Delve" type="GoRemoteDebugConfigurationType" factoryName="Go Remote" activateToolWindowBeforeRun="false">
+    <option name="disconnectOption" value="STOP" />
+    <disconnect value="STOP" />
+    <method v="2" />
+  </configuration>
+</component>
