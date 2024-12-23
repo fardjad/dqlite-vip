@@ -19,6 +19,8 @@ RUN sudo mkdir -p /build && \
 FROM ubuntu:noble AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    software-properties-common \
+    apt-utils \
     build-essential \
     automake \
     libtool \
@@ -29,14 +31,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsqlite3-dev \
     pkg-config \
     git \
-    software-properties-common \
-    apt-utils && \
-    rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 RUN add-apt-repository ppa:longsleep/golang-backports && \
     apt-get update && \
-    apt-get install -y --no-install-recommends golang-go && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends golang-go \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=just-builder /build/just.deb /tmp/just.deb
 RUN dpkg -i /tmp/just.deb
+
+# https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user#_creating-a-nonroot-user
+RUN if id "ubuntu" &>/dev/null; then userdel -f -r ubuntu; fi
+ARG USERNAME=dev
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    #
+    # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+USER $USERNAME

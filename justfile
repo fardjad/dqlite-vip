@@ -71,12 +71,15 @@ debug-go command *args:
       -ldflags '-extldflags "-Wl,-rpath,$ORIGIN/lib -Wl,-rpath,$ORIGIN/../lib"' \
       {{ args }}
 
+[group("debug")]
 build-debug:
     @just build-dynamic debug-go
 
+[group("debug")]
 build-test-debug *args: build-debug
     @just debug-go test -c -o ./bin/dynamic/test {{ args }}
 
+[group("debug")]
 dlv bin:
     #!/usr/bin/env bash
 

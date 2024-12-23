@@ -1,0 +1,9 @@
+{
+  "id": "dotfiles",
+  "version": "0.0.0",
+  "name": "dotfiles",
+  "documentationURL": "https://github.com/fardjad/dotfiles",
+  "description": "My dotfiles",
+  "options": {},
+  "installsAfter": []
+}
