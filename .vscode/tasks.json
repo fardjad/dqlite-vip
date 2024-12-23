@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-debug",
+            "type": "shell",
+            "command": "just build-debug"
+        },
+        {
+            "label": "build-test-debug",
+            "type": "shell",
+            "command": "just build-test-debug ${fileDirname}"
+        }
+    ]
+}
