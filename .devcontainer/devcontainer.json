@@ -3,28 +3,32 @@
 {
   "name": "Ubuntu",
   "build": {
-    "dockerfile": "../Dockerfile.base",
-    "context": ".."
+    "dockerfile": "./Dockerfile",
+    "context": "."
   },
-  "features": {
-    "./dotfiles": {}
-  },
+  "features": {},
   "forwardPorts": [],
   "customizations": {
     "jetbrains": {
       "backend": "IntelliJ",
       "plugins": [
-        "org.jetbrains.plugins.go",
         "IdeaVIM",
-        "org.mvnsearch.plugins.justPlugin"
+        "com.github.copilot",
+        "org.jetbrains.plugins.go",
+        "org.mvnsearch.plugins.justPlugin",
+        "software.xdev.saveactions"
+      ]
+    },
+    "vscode": {
+      "extensions": [
+        "golang.go"
       ]
     }
   },
   "containerUser": "dev",
   "remoteUser": "dev",
   "containerEnv": {
-    "SHELL": "/home/linuxbrew/.linuxbrew/bin/zsh",
-    "EDITOR": "vim"
+    "SHELL": "/home/linuxbrew/.linuxbrew/bin/zsh"
   },
   "runArgs": [
     "--name",
@@ -32,5 +36,5 @@
     "--network",
     "host"
   ],
-  privileged: true
+  "privileged": true
 }

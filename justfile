@@ -99,37 +99,3 @@ clean:
     set -euo pipefail
 
     rm -rf bin hack/.build hack/.deps
-
-[group("docker")]
-[doc("Clean the Docker images")]
-docker-clean:
-    #!/usr/bin/env bash
-
-    set -euo pipefail
-
-    docker rmi -f {{ static_docker_image_name }} 2>/dev/null || true
-    docker rmi -f {{ base_docker_image_name }} 2>/dev/null || true
-
-[private]
-docker-build-base:
-    #!/usr/bin/env bash
-
-    set -euo pipefail
-
-    docker build -f ./Dockerfile.base . -t {{ base_docker_image_name }}
-
-[group("docker")]
-[doc("Build the dqlite-vip binary statically in a Docker container and copy it to the host")]
-docker-build-static: docker-build-base
-    #!/usr/bin/env bash
-
-    set -euo pipefail
-
-    docker build -f ./Dockerfile.static . -t {{ static_docker_image_name }}
-    container_id=$(docker create {{ static_docker_image_name }})
-
-    mkdir -p bin/static
-    docker cp "${container_id}:/usr/local/bin/dqlite-vip" "bin/static/dqlite-vip"
-    chmod +x bin/static/dqlite-vip
-
-    docker rm "${container_id}"
