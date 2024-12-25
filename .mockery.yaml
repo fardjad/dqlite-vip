@@ -1,0 +1,12 @@
+quiet: True
+with-expecter: True
+dir: mocks
+mockname: "{{.InterfaceName}}"
+outpkg: mocks
+filename: "{{.InterfaceName}}.go"
+all: True
+issue-845-fix: True
+packages:
+  fardjad.com/dqlite-vip:
+    config:
+      recursive: True

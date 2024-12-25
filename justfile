@@ -10,6 +10,20 @@ static_docker_image_name := "dqlite-vip-static"
 help:
     just --list
     
+[group("test")]
+[doc("Generate mocks with mockery")]
+generate-mocks:
+    #!/usr/bin/env bash
+
+    set -euo pipefail
+
+    eval $(go env)
+
+    rm -rf mocks
+    go install github.com/vektra/mockery/v2
+    "${GOPATH}/bin/mockery" --all
+    go mod tidy
+     
 [private]
 static-go command *args:
     #!/usr/bin/env bash

@@ -21,7 +21,8 @@
     },
     "vscode": {
       "extensions": [
-        "golang.go"
+        "golang.go",
+        "redhat.vscode-yaml"
       ]
     }
   },
