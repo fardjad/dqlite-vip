@@ -1,3 +1,8 @@
+set shell := ["/usr/bin/env", "bash", "-euo", "pipefail", "-c"]
+
+git_version := `git describe --tags --always --dirty --abbrev=10`
+version_ldflags := "-X 'fardjad.com/dqlite-vip/version.version=" + git_version + "'"
+
 base_docker_image_name := "dqlite-vip-base"
 static_docker_image_name := "dqlite-vip-static"
 
@@ -16,7 +21,7 @@ static-go command *args:
     
     go {{ command }} \
       -tags libsqlite3 \
-      -ldflags '-s -w -linkmode "external" -extldflags "-static"' \
+      -ldflags '-s -w -linkmode "external" -extldflags "-static" {{ version_ldflags }}' \
       {{ args }}
 
 [group("build")]
@@ -27,7 +32,7 @@ build-static:
     set -euo pipefail
 
     mkdir -p bin/static
-    just static-go build -o bin/static/dqlite-vip ./main.go
+    just static-go build -o bin/static/dqlite-vip ./
 
 [private]
 dynamic-go command *args:
@@ -40,7 +45,7 @@ dynamic-go command *args:
 
     go {{ command }} \
       -tags libsqlite3 \
-      -ldflags '-s -w -extldflags "-Wl,-rpath,$ORIGIN/lib -Wl,-rpath,$ORIGIN/../lib"' \
+      -ldflags '-s -w -extldflags "-Wl,-rpath,$ORIGIN/lib -Wl,-rpath,$ORIGIN/../lib" {{ version_ldflags }}' \
       {{ args }}
 
 [group("build")]
@@ -51,7 +56,7 @@ build-dynamic go_recipe="dynamic-go":
     set -euo pipefail
 
     mkdir -p bin/dynamic
-    just {{ go_recipe }} build -o bin/dynamic/dqlite-vip ./main.go
+    just {{ go_recipe }} build -o bin/dynamic/dqlite-vip ./
 
     mkdir -p bin/dynamic/lib
     cp -r ./hack/.deps/dynamic/lib/*.so* ./bin/dynamic/lib/
@@ -78,6 +83,15 @@ build-debug:
 [group("debug")]
 build-test-debug *args: build-debug
     @just debug-go test -c -o ./bin/dynamic/test {{ args }}
+    
+[group("test")]
+[doc("Run the tests")]
+test:
+    #!/usr/bin/env bash
+
+    set -euo pipefail
+
+    just dynamic-go test ./...
 
 [group("debug")]
 dlv bin:
@@ -99,3 +113,13 @@ clean:
     set -euo pipefail
 
     rm -rf bin hack/.build hack/.deps
+
+[group("run")]
+[doc("Run the dqlite-vip binary")]
+dqlite-vip *args:
+    #!/usr/bin/env bash
+
+    set -euo pipefail
+
+    just build-dynamic > /dev/null
+    ./bin/dynamic/dqlite-vip {{ args }}
