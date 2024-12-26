@@ -11,6 +11,10 @@ type Handlers struct {
 	clusterNode cluster.ClusterNode
 }
 
+type ErrorResponseBody struct {
+	Message string `json:"message"`
+}
+
 func NewHandlers(clusterNode cluster.ClusterNode) Handlers {
 	return Handlers{clusterNode: clusterNode}
 }
@@ -30,4 +34,10 @@ func (s *Handlers) writeJSON(w http.ResponseWriter, statusCode int, headers map[
 	}
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(response)
+}
+
+func (s *Handlers) writeErrorJSON(w http.ResponseWriter, statusCode int, err error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(ErrorResponseBody{Message: err.Error()})
 }

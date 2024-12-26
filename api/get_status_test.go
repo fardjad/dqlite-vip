@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
 	"fardjad.com/dqlite-vip/cluster"
@@ -26,14 +27,14 @@ func (s *GetStatusTestSuite) SetupTest() {
 }
 
 func (s *GetStatusTestSuite) TestGetStatus_Healthy() {
-	clusterMembers := []cluster.ClusterMemberInfo{
+	clusterMembers := []*cluster.ClusterMemberInfo{
 		{ID: 1, Address: "192.168.1.1", Role: "voter"},
 		{ID: 2, Address: "192.168.1.2", Role: "voter"},
 		{ID: 3, Address: "192.168.1.3", Role: "voter"},
 	}
 	s.clusterNode.EXPECT().ID().Return(uint64(1))
-	s.clusterNode.EXPECT().LeaderID().Return(uint64(1))
-	s.clusterNode.EXPECT().ClusterMembers().Return(clusterMembers)
+	s.clusterNode.EXPECT().LeaderID(mock.Anything).Return(uint64(1), nil)
+	s.clusterNode.EXPECT().ClusterMembers(mock.Anything).Return(clusterMembers, nil)
 
 	request, _ := http.NewRequest(http.MethodGet, "/status", nil)
 	response := httptest.NewRecorder()

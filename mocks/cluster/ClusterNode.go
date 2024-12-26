@@ -68,24 +68,34 @@ func (_c *ClusterNode_Close_Call) RunAndReturn(run func() error) *ClusterNode_Cl
 	return _c
 }
 
-// ClusterMembers provides a mock function with no fields
-func (_m *ClusterNode) ClusterMembers() []cluster.ClusterMemberInfo {
-	ret := _m.Called()
+// ClusterMembers provides a mock function with given fields: ctx
+func (_m *ClusterNode) ClusterMembers(ctx context.Context) ([]*cluster.ClusterMemberInfo, error) {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ClusterMembers")
 	}
 
-	var r0 []cluster.ClusterMemberInfo
-	if rf, ok := ret.Get(0).(func() []cluster.ClusterMemberInfo); ok {
-		r0 = rf()
+	var r0 []*cluster.ClusterMemberInfo
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*cluster.ClusterMemberInfo, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []*cluster.ClusterMemberInfo); ok {
+		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]cluster.ClusterMemberInfo)
+			r0 = ret.Get(0).([]*cluster.ClusterMemberInfo)
 		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // ClusterNode_ClusterMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ClusterMembers'
@@ -94,23 +104,24 @@ type ClusterNode_ClusterMembers_Call struct {
 }
 
 // ClusterMembers is a helper method to define mock.On call
-func (_e *ClusterNode_Expecter) ClusterMembers() *ClusterNode_ClusterMembers_Call {
-	return &ClusterNode_ClusterMembers_Call{Call: _e.mock.On("ClusterMembers")}
+//   - ctx context.Context
+func (_e *ClusterNode_Expecter) ClusterMembers(ctx interface{}) *ClusterNode_ClusterMembers_Call {
+	return &ClusterNode_ClusterMembers_Call{Call: _e.mock.On("ClusterMembers", ctx)}
 }
 
-func (_c *ClusterNode_ClusterMembers_Call) Run(run func()) *ClusterNode_ClusterMembers_Call {
+func (_c *ClusterNode_ClusterMembers_Call) Run(run func(ctx context.Context)) *ClusterNode_ClusterMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(context.Context))
 	})
 	return _c
 }
 
-func (_c *ClusterNode_ClusterMembers_Call) Return(_a0 []cluster.ClusterMemberInfo) *ClusterNode_ClusterMembers_Call {
-	_c.Call.Return(_a0)
+func (_c *ClusterNode_ClusterMembers_Call) Return(_a0 []*cluster.ClusterMemberInfo, _a1 error) *ClusterNode_ClusterMembers_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ClusterNode_ClusterMembers_Call) RunAndReturn(run func() []cluster.ClusterMemberInfo) *ClusterNode_ClusterMembers_Call {
+func (_c *ClusterNode_ClusterMembers_Call) RunAndReturn(run func(context.Context) ([]*cluster.ClusterMemberInfo, error)) *ClusterNode_ClusterMembers_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -216,22 +227,32 @@ func (_c *ClusterNode_ID_Call) RunAndReturn(run func() uint64) *ClusterNode_ID_C
 	return _c
 }
 
-// LeaderID provides a mock function with no fields
-func (_m *ClusterNode) LeaderID() uint64 {
-	ret := _m.Called()
+// LeaderID provides a mock function with given fields: ctx
+func (_m *ClusterNode) LeaderID(ctx context.Context) (uint64, error) {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for LeaderID")
 	}
 
 	var r0 uint64
-	if rf, ok := ret.Get(0).(func() uint64); ok {
-		r0 = rf()
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(uint64)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // ClusterNode_LeaderID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'LeaderID'
@@ -240,23 +261,24 @@ type ClusterNode_LeaderID_Call struct {
 }
 
 // LeaderID is a helper method to define mock.On call
-func (_e *ClusterNode_Expecter) LeaderID() *ClusterNode_LeaderID_Call {
-	return &ClusterNode_LeaderID_Call{Call: _e.mock.On("LeaderID")}
+//   - ctx context.Context
+func (_e *ClusterNode_Expecter) LeaderID(ctx interface{}) *ClusterNode_LeaderID_Call {
+	return &ClusterNode_LeaderID_Call{Call: _e.mock.On("LeaderID", ctx)}
 }
 
-func (_c *ClusterNode_LeaderID_Call) Run(run func()) *ClusterNode_LeaderID_Call {
+func (_c *ClusterNode_LeaderID_Call) Run(run func(ctx context.Context)) *ClusterNode_LeaderID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(context.Context))
 	})
 	return _c
 }
 
-func (_c *ClusterNode_LeaderID_Call) Return(_a0 uint64) *ClusterNode_LeaderID_Call {
-	_c.Call.Return(_a0)
+func (_c *ClusterNode_LeaderID_Call) Return(_a0 uint64, _a1 error) *ClusterNode_LeaderID_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ClusterNode_LeaderID_Call) RunAndReturn(run func() uint64) *ClusterNode_LeaderID_Call {
+func (_c *ClusterNode_LeaderID_Call) RunAndReturn(run func(context.Context) (uint64, error)) *ClusterNode_LeaderID_Call {
 	_c.Call.Return(run)
 	return _c
 }

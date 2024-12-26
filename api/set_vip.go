@@ -17,13 +17,13 @@ func (s *Handlers) SetVIP(w http.ResponseWriter, r *http.Request) {
 	var requestBody SetVIPRequestBody
 	err := json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
-		s.writeJSON(w, http.StatusBadRequest, nil, SetVIPResponseBody{Message: "Invalid request body"})
+		s.writeErrorJSON(w, http.StatusBadRequest, err)
 		return
 	}
 
 	err = s.clusterNode.SetString("vip", requestBody.VIP)
 	if err != nil {
-		s.writeJSON(w, http.StatusInternalServerError, nil, SetVIPResponseBody{Message: "Internal server error"})
+		s.writeErrorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 

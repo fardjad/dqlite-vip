@@ -12,8 +12,8 @@ type ClusterNode interface {
 	Start() error
 	Ready(ctx context.Context) error
 	ID() uint64
-	LeaderID() uint64
-	ClusterMembers() []ClusterMemberInfo
+	LeaderID(ctx context.Context) (uint64, error)
+	ClusterMembers(ctx context.Context) ([]*ClusterMemberInfo, error)
 	Close() error
 
 	SetString(key string, value string) error
