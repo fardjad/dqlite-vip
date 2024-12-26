@@ -20,9 +20,9 @@ func (_m *ClusterNodeFactory) EXPECT() *ClusterNodeFactory_Expecter {
 	return &ClusterNodeFactory_Expecter{mock: &_m.Mock}
 }
 
-// NewClusterNode provides a mock function with given fields: dataDir, bindCluster, bindHttp, join
-func (_m *ClusterNodeFactory) NewClusterNode(dataDir string, bindCluster string, bindHttp string, join []string) (cluster.ClusterNode, error) {
-	ret := _m.Called(dataDir, bindCluster, bindHttp, join)
+// NewClusterNode provides a mock function with given fields: dataDir, bindCluster, join
+func (_m *ClusterNodeFactory) NewClusterNode(dataDir string, bindCluster string, join []string) (cluster.ClusterNode, error) {
+	ret := _m.Called(dataDir, bindCluster, join)
 
 	if len(ret) == 0 {
 		panic("no return value specified for NewClusterNode")
@@ -30,19 +30,19 @@ func (_m *ClusterNodeFactory) NewClusterNode(dataDir string, bindCluster string,
 
 	var r0 cluster.ClusterNode
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string, string, []string) (cluster.ClusterNode, error)); ok {
-		return rf(dataDir, bindCluster, bindHttp, join)
+	if rf, ok := ret.Get(0).(func(string, string, []string) (cluster.ClusterNode, error)); ok {
+		return rf(dataDir, bindCluster, join)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, string, []string) cluster.ClusterNode); ok {
-		r0 = rf(dataDir, bindCluster, bindHttp, join)
+	if rf, ok := ret.Get(0).(func(string, string, []string) cluster.ClusterNode); ok {
+		r0 = rf(dataDir, bindCluster, join)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(cluster.ClusterNode)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, string, []string) error); ok {
-		r1 = rf(dataDir, bindCluster, bindHttp, join)
+	if rf, ok := ret.Get(1).(func(string, string, []string) error); ok {
+		r1 = rf(dataDir, bindCluster, join)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -58,15 +58,14 @@ type ClusterNodeFactory_NewClusterNode_Call struct {
 // NewClusterNode is a helper method to define mock.On call
 //   - dataDir string
 //   - bindCluster string
-//   - bindHttp string
 //   - join []string
-func (_e *ClusterNodeFactory_Expecter) NewClusterNode(dataDir interface{}, bindCluster interface{}, bindHttp interface{}, join interface{}) *ClusterNodeFactory_NewClusterNode_Call {
-	return &ClusterNodeFactory_NewClusterNode_Call{Call: _e.mock.On("NewClusterNode", dataDir, bindCluster, bindHttp, join)}
+func (_e *ClusterNodeFactory_Expecter) NewClusterNode(dataDir interface{}, bindCluster interface{}, join interface{}) *ClusterNodeFactory_NewClusterNode_Call {
+	return &ClusterNodeFactory_NewClusterNode_Call{Call: _e.mock.On("NewClusterNode", dataDir, bindCluster, join)}
 }
 
-func (_c *ClusterNodeFactory_NewClusterNode_Call) Run(run func(dataDir string, bindCluster string, bindHttp string, join []string)) *ClusterNodeFactory_NewClusterNode_Call {
+func (_c *ClusterNodeFactory_NewClusterNode_Call) Run(run func(dataDir string, bindCluster string, join []string)) *ClusterNodeFactory_NewClusterNode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(string), args[3].([]string))
+		run(args[0].(string), args[1].(string), args[2].([]string))
 	})
 	return _c
 }
@@ -76,7 +75,7 @@ func (_c *ClusterNodeFactory_NewClusterNode_Call) Return(_a0 cluster.ClusterNode
 	return _c
 }
 
-func (_c *ClusterNodeFactory_NewClusterNode_Call) RunAndReturn(run func(string, string, string, []string) (cluster.ClusterNode, error)) *ClusterNodeFactory_NewClusterNode_Call {
+func (_c *ClusterNodeFactory_NewClusterNode_Call) RunAndReturn(run func(string, string, []string) (cluster.ClusterNode, error)) *ClusterNodeFactory_NewClusterNode_Call {
 	_c.Call.Return(run)
 	return _c
 }

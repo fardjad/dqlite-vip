@@ -22,8 +22,8 @@ func (root *Root) Command() *cobra.Command {
 	cmd.Run = root.run
 
 	start := &start{
-		waiter:             &SigTermWaiter{},
-		clusterNodeFactory: &fakeClusterNodeFactory{},
+		waiter: &SigTermWaiter{},
+		// TODO: set clusterNodeFactory
 	}
 	cmd.AddCommand(start.command())
 

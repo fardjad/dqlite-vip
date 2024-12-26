@@ -1,13 +1,17 @@
 package cmd
 
 import (
+	"context"
+
+	"fardjad.com/dqlite-vip/api"
 	"fardjad.com/dqlite-vip/cluster"
 	"github.com/spf13/cobra"
 )
 
 type start struct {
-	waiter             Waiter
-	clusterNodeFactory cluster.ClusterNodeFactory
+	waiter                  Waiter
+	clusterNodeFactory      cluster.ClusterNodeFactory
+	backgroundServerFactory api.BackgroundServerFactory
 
 	// flags
 	dataDir     string
@@ -21,14 +25,21 @@ func (c *start) runE(cmd *cobra.Command, args []string) error {
 	if c.join != "" {
 		join = append(join, c.join)
 	}
-	clusterNode, err := c.clusterNodeFactory.NewClusterNode(c.dataDir, c.bindCluster, c.bindHttp, join)
+	clusterNode, err := c.clusterNodeFactory.NewClusterNode(c.dataDir, c.bindCluster, join)
 	if err != nil {
 		return err
 	}
 
+	handlers := api.NewHandlers(clusterNode)
+	server := c.backgroundServerFactory.NewServer(c.bindHttp, handlers.Mux())
+
+	server.ListenAndServeInBackground()
+	defer server.Shutdown(context.Background())
+
 	clusterNode.Start()
+	defer clusterNode.Close()
+
 	c.waiter.Wait()
-	clusterNode.Close()
 
 	return nil
 }

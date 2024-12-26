@@ -1,4 +1,4 @@
-quiet: True
+quiet: False
 with-expecter: True
 dir: mocks
 mockname: "{{.InterfaceName}}"

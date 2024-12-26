@@ -1,7 +1,10 @@
 package cluster
 
+import "context"
+
 type ClusterNode interface {
 	Start() error
+	Ready(ctx context.Context) error
 	IsLeader() bool
 	SetString(key string, value string) error
 	GetString(key string) (string, error)
@@ -9,5 +12,5 @@ type ClusterNode interface {
 }
 
 type ClusterNodeFactory interface {
-	NewClusterNode(dataDir string, bindCluster string, bindHttp string, join []string) (ClusterNode, error)
+	NewClusterNode(dataDir string, bindCluster string, join []string) (ClusterNode, error)
 }
