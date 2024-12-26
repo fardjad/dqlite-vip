@@ -228,6 +228,52 @@ func (_c *ClusterNode_ID_Call) RunAndReturn(run func() uint64) *ClusterNode_ID_C
 	return _c
 }
 
+// IsLeader provides a mock function with given fields: ctx
+func (_m *ClusterNode) IsLeader(ctx context.Context) bool {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsLeader")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(context.Context) bool); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// ClusterNode_IsLeader_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsLeader'
+type ClusterNode_IsLeader_Call struct {
+	*mock.Call
+}
+
+// IsLeader is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *ClusterNode_Expecter) IsLeader(ctx interface{}) *ClusterNode_IsLeader_Call {
+	return &ClusterNode_IsLeader_Call{Call: _e.mock.On("IsLeader", ctx)}
+}
+
+func (_c *ClusterNode_IsLeader_Call) Run(run func(ctx context.Context)) *ClusterNode_IsLeader_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *ClusterNode_IsLeader_Call) Return(_a0 bool) *ClusterNode_IsLeader_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ClusterNode_IsLeader_Call) RunAndReturn(run func(context.Context) bool) *ClusterNode_IsLeader_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // LeaderID provides a mock function with given fields: ctx
 func (_m *ClusterNode) LeaderID(ctx context.Context) (uint64, error) {
 	ret := _m.Called(ctx)

@@ -9,6 +9,7 @@ import (
 type GetStatusResponseBody struct {
 	ID             uint64                       `json:"id"`
 	LeaderID       uint64                       `json:"leader_id"`
+	IsLeader       bool                         `json:"is_leader"`
 	ClusterMembers []*cluster.ClusterMemberInfo `json:"cluster_members"`
 }
 
@@ -25,9 +26,12 @@ func (s *Handlers) GetStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	isLeader := s.clusterNode.IsLeader(r.Context())
+
 	response := GetStatusResponseBody{
 		ID:             id,
 		LeaderID:       leaderID,
+		IsLeader:       isLeader,
 		ClusterMembers: clusterMembers,
 	}
 

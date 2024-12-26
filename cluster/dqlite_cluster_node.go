@@ -81,6 +81,15 @@ func (n *DqliteClusterNode) LeaderID(ctx context.Context) (uint64, error) {
 	return leader.ID, nil
 }
 
+func (n *DqliteClusterNode) IsLeader(ctx context.Context) bool {
+	leaderID, err := n.LeaderID(ctx)
+	if err != nil {
+		return false
+	}
+
+	return n.app.ID() == leaderID
+}
+
 func (n *DqliteClusterNode) ClusterMembers(ctx context.Context) ([]*ClusterMemberInfo, error) {
 	client, err := n.app.Leader(ctx)
 	if err != nil {

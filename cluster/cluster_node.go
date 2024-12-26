@@ -13,6 +13,7 @@ type ClusterNode interface {
 	Ready(ctx context.Context) error
 	ID() uint64
 	LeaderID(ctx context.Context) (uint64, error)
+	IsLeader(ctx context.Context) bool
 	ClusterMembers(ctx context.Context) ([]*ClusterMemberInfo, error)
 	Close(ctx context.Context) error
 

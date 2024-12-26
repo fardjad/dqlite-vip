@@ -34,6 +34,7 @@ func (s *GetStatusTestSuite) TestGetStatus_Healthy() {
 	}
 	s.clusterNode.EXPECT().ID().Return(uint64(1))
 	s.clusterNode.EXPECT().LeaderID(mock.Anything).Return(uint64(1), nil)
+	s.clusterNode.EXPECT().IsLeader(mock.Anything).Return(true)
 	s.clusterNode.EXPECT().ClusterMembers(mock.Anything).Return(clusterMembers, nil)
 
 	request, _ := http.NewRequest(http.MethodGet, "/status", nil)
@@ -50,6 +51,7 @@ func (s *GetStatusTestSuite) TestGetStatus_Healthy() {
 	s.Equal(&GetStatusResponseBody{
 		ID:             1,
 		LeaderID:       1,
+		IsLeader:       true,
 		ClusterMembers: clusterMembers,
 	}, &responseBody)
 }
