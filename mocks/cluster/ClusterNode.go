@@ -23,17 +23,17 @@ func (_m *ClusterNode) EXPECT() *ClusterNode_Expecter {
 	return &ClusterNode_Expecter{mock: &_m.Mock}
 }
 
-// Close provides a mock function with no fields
-func (_m *ClusterNode) Close() error {
-	ret := _m.Called()
+// Close provides a mock function with given fields: ctx
+func (_m *ClusterNode) Close(ctx context.Context) error {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Close")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -47,13 +47,14 @@ type ClusterNode_Close_Call struct {
 }
 
 // Close is a helper method to define mock.On call
-func (_e *ClusterNode_Expecter) Close() *ClusterNode_Close_Call {
-	return &ClusterNode_Close_Call{Call: _e.mock.On("Close")}
+//   - ctx context.Context
+func (_e *ClusterNode_Expecter) Close(ctx interface{}) *ClusterNode_Close_Call {
+	return &ClusterNode_Close_Call{Call: _e.mock.On("Close", ctx)}
 }
 
-func (_c *ClusterNode_Close_Call) Run(run func()) *ClusterNode_Close_Call {
+func (_c *ClusterNode_Close_Call) Run(run func(ctx context.Context)) *ClusterNode_Close_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(context.Context))
 	})
 	return _c
 }
@@ -63,7 +64,7 @@ func (_c *ClusterNode_Close_Call) Return(_a0 error) *ClusterNode_Close_Call {
 	return _c
 }
 
-func (_c *ClusterNode_Close_Call) RunAndReturn(run func() error) *ClusterNode_Close_Call {
+func (_c *ClusterNode_Close_Call) RunAndReturn(run func(context.Context) error) *ClusterNode_Close_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -376,17 +377,17 @@ func (_c *ClusterNode_SetString_Call) RunAndReturn(run func(string, string) erro
 	return _c
 }
 
-// Start provides a mock function with no fields
-func (_m *ClusterNode) Start() error {
-	ret := _m.Called()
+// Start provides a mock function with given fields: ctx
+func (_m *ClusterNode) Start(ctx context.Context) error {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Start")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -400,13 +401,14 @@ type ClusterNode_Start_Call struct {
 }
 
 // Start is a helper method to define mock.On call
-func (_e *ClusterNode_Expecter) Start() *ClusterNode_Start_Call {
-	return &ClusterNode_Start_Call{Call: _e.mock.On("Start")}
+//   - ctx context.Context
+func (_e *ClusterNode_Expecter) Start(ctx interface{}) *ClusterNode_Start_Call {
+	return &ClusterNode_Start_Call{Call: _e.mock.On("Start", ctx)}
 }
 
-func (_c *ClusterNode_Start_Call) Run(run func()) *ClusterNode_Start_Call {
+func (_c *ClusterNode_Start_Call) Run(run func(ctx context.Context)) *ClusterNode_Start_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(context.Context))
 	})
 	return _c
 }
@@ -416,7 +418,7 @@ func (_c *ClusterNode_Start_Call) Return(_a0 error) *ClusterNode_Start_Call {
 	return _c
 }
 
-func (_c *ClusterNode_Start_Call) RunAndReturn(run func() error) *ClusterNode_Start_Call {
+func (_c *ClusterNode_Start_Call) RunAndReturn(run func(context.Context) error) *ClusterNode_Start_Call {
 	_c.Call.Return(run)
 	return _c
 }

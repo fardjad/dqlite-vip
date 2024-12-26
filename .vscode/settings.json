@@ -1,5 +1,6 @@
 {
     "go.buildTags": "libsqlite3",
+    "go.toolsManagement.autoUpdate": true,
     "go.testEnvVars": {
         "CGO_CFLAGS": "-I${workspaceFolder}/hack/.deps/dynamic/include",
         "CGO_LDFLAGS": "-L${workspaceFolder}/hack/.deps/dynamic/lib -ldqlite -luv -llz4 -lsqlite3 -Wl,-z,stack-size=1048576",

@@ -27,8 +27,8 @@ func (s *StartTestSuite) SetupTest() {
 	s.waiter.EXPECT().Wait().Return()
 
 	s.clusterNode = clusterMocks.NewClusterNode(s.T())
-	s.clusterNode.EXPECT().Start().Return(nil)
-	s.clusterNode.EXPECT().Close().Return(nil)
+	s.clusterNode.EXPECT().Start(mock.Anything).Return(nil)
+	s.clusterNode.EXPECT().Close(mock.Anything).Return(nil)
 
 	s.clusterNodeFactory = clusterMocks.NewClusterNodeFactory(s.T())
 

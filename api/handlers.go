@@ -23,6 +23,7 @@ func (s *Handlers) Mux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /status", s.GetStatus)
 	mux.HandleFunc("PUT /vip", s.SetVIP)
+	mux.HandleFunc("GET /vip", s.GetVIP)
 
 	return mux
 }

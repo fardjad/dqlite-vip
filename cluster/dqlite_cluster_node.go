@@ -2,8 +2,9 @@ package cluster
 
 import (
 	"context"
-	"errors"
+	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/canonical/go-dqlite/v2/app"
@@ -21,13 +22,14 @@ func (f *DqliteClusterNodeFactory) NewClusterNode(dataDir string, bindCluster st
 
 type DqliteClusterNode struct {
 	app *app.App
+	db  *sql.DB
 
 	dataDir     string
 	bindCluster string
 	join        []string
 }
 
-func (n *DqliteClusterNode) Start() error {
+func (n *DqliteClusterNode) Start(ctx context.Context) error {
 	if err := os.MkdirAll(n.dataDir, 0755); err != nil {
 		return fmt.Errorf("can't create %s: %v", n.dataDir, err)
 	}
@@ -41,6 +43,18 @@ func (n *DqliteClusterNode) Start() error {
 		return err
 	}
 
+	db, err := app.Open(ctx, "db")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT)")
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Dqlite node is listening on %s", n.bindCluster)
+
+	n.db = db
 	n.app = app
 	return nil
 }
@@ -89,14 +103,36 @@ func (n *DqliteClusterNode) ClusterMembers(ctx context.Context) ([]*ClusterMembe
 	return clusterMembers, nil
 }
 
-func (n *DqliteClusterNode) Close() error {
+func (n *DqliteClusterNode) Close(ctx context.Context) error {
+	err := n.db.Close()
+	if err != nil {
+		log.Println("Failed to close database:", err)
+	}
+
+	err = n.app.Handover(ctx)
+	if err != nil {
+		log.Println("Failed to handover leadership:", err)
+	}
+
 	return n.app.Close()
 }
 
 func (n *DqliteClusterNode) SetString(key string, value string) error {
-	return errors.ErrUnsupported
+	_, err := n.db.Exec("INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)", key, value)
+	return err
 }
 
 func (n *DqliteClusterNode) GetString(key string) (string, error) {
-	return "", errors.ErrUnsupported
+	row := n.db.QueryRow("SELECT value FROM kv WHERE key = ?", key)
+	if row.Err() != nil {
+		return "", row.Err()
+	}
+
+	var value string
+	err := row.Scan(&value)
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
 }

@@ -33,11 +33,17 @@ func (c *start) runE(cmd *cobra.Command, args []string) error {
 	handlers := api.NewHandlers(clusterNode)
 	server := c.backgroundServerFactory.NewServer(c.bindHttp, handlers.Mux())
 
-	server.ListenAndServeInBackground()
+	err = server.ListenAndServeInBackground()
+	if err != nil {
+		return err
+	}
 	defer server.Shutdown(context.Background())
 
-	clusterNode.Start()
-	defer clusterNode.Close()
+	err = clusterNode.Start(context.Background())
+	if err != nil {
+		return err
+	}
+	defer clusterNode.Close(context.Background())
 
 	c.waiter.Wait()
 

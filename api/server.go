@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"log"
 	"net"
 	"net/http"
 )
@@ -9,6 +10,10 @@ import (
 type BackgroundServer interface {
 	ListenAndServeInBackground() error
 	Shutdown(ctx context.Context) error
+}
+
+type BackgroundServerFactory interface {
+	NewServer(addr string, handler http.Handler) BackgroundServer
 }
 
 type BackgroundHttpServer struct {
@@ -20,19 +25,20 @@ func (s *BackgroundHttpServer) ListenAndServeInBackground() error {
 	if err != nil {
 		return err
 	}
+	log.Printf("HTTP server is listening on %s", s.Addr)
 
 	go http.Serve(l, s.Handler)
 
 	return nil
 }
 
-type BackgroundServerFactory interface {
-	NewServer(addr string, handler http.Handler) BackgroundServer
+func (s *BackgroundHttpServer) Shutdown(ctx context.Context) error {
+	return s.Server.Shutdown(ctx)
 }
 
 type BackgroundHttpServerFactory struct{}
 
-func (f *BackgroundHttpServerFactory) NewServer(addr string, handler http.Handler) *BackgroundHttpServer {
+func (f *BackgroundHttpServerFactory) NewServer(addr string, handler http.Handler) BackgroundServer {
 	return &BackgroundHttpServer{
 		&http.Server{
 			Addr:    addr,

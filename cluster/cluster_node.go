@@ -9,12 +9,12 @@ type ClusterMemberInfo struct {
 }
 
 type ClusterNode interface {
-	Start() error
+	Start(ctx context.Context) error
 	Ready(ctx context.Context) error
 	ID() uint64
 	LeaderID(ctx context.Context) (uint64, error)
 	ClusterMembers(ctx context.Context) ([]*ClusterMemberInfo, error)
-	Close() error
+	Close(ctx context.Context) error
 
 	SetString(key string, value string) error
 	GetString(key string) (string, error)

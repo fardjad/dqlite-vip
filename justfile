@@ -135,5 +135,36 @@ dqlite-vip *args:
 
     set -euo pipefail
 
-    just build-dynamic > /dev/null
-    ./bin/dynamic/dqlite-vip {{ args }}
+    just build-static > /dev/null
+    ./bin/static/dqlite-vip {{ args }}
+    
+[group("run")]
+[doc("Run a 3-node cluster of dqlite-vip nodes")]
+run-cluster:
+    #!/usr/bin/env bash
+    set -e
+
+    rm -rf /tmp/dqlite-vip
+    
+    just build-static > /dev/null
+
+    ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/1 --bind-cluster 127.0.0.1:8001 --bind-http 127.0.0.1:9901 & PID1=$!
+    ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/2 --bind-cluster 127.0.0.1:8002 --bind-http 127.0.0.1:9902 --join 127.0.0.1:8001 & PID2=$!
+    ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/3 --bind-cluster 127.0.0.1:8003 --bind-http 127.0.0.1:9903 --join 127.0.0.1:8001 & PID3=$!
+
+    cleanup() {
+        echo "Shutting down..."
+        kill -9 $PID1 $PID2 $PID3 2>/dev/null || true
+        wait $PID1 $PID2 $PID3 2>/dev/null || true
+        exit
+    }
+
+    trap cleanup EXIT INT TERM
+
+    while true; do
+        if ! kill -0 $PID1 2>/dev/null || ! kill -0 $PID2 2>/dev/null || ! kill -0 $PID3 2>/dev/null; then
+            echo "One of the processes exited, shutting down all..."
+            exit 1
+        fi
+        sleep 1
+    done

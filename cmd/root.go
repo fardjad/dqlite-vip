@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fardjad.com/dqlite-vip/api"
+	"fardjad.com/dqlite-vip/cluster"
 	"fardjad.com/dqlite-vip/version"
 	"github.com/spf13/cobra"
 )
@@ -22,8 +24,9 @@ func (root *Root) Command() *cobra.Command {
 	cmd.Run = root.run
 
 	start := &start{
-		waiter: &SigTermWaiter{},
-		// TODO: set clusterNodeFactory
+		waiter:                  &SigTermWaiter{},
+		clusterNodeFactory:      &cluster.DqliteClusterNodeFactory{},
+		backgroundServerFactory: &api.BackgroundHttpServerFactory{},
 	}
 	cmd.AddCommand(start.command())
 
