@@ -1,8 +1,7 @@
-quiet: False
 with-expecter: True
-dir: mocks
+dir: mocks/{{ replaceAll .InterfaceDirRelative "internal" "internal_" }}
 mockname: "{{.InterfaceName}}"
-outpkg: mocks
+outpkg: "{{.PackageName}}"
 filename: "{{.InterfaceName}}.go"
 all: True
 issue-845-fix: True

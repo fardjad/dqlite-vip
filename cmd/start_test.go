@@ -4,36 +4,39 @@ import (
 	"context"
 	"testing"
 
-	"fardjad.com/dqlite-vip/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+
+	apiMocks "fardjad.com/dqlite-vip/mocks/api"
+	clusterMocks "fardjad.com/dqlite-vip/mocks/cluster"
+	cmdMocks "fardjad.com/dqlite-vip/mocks/cmd"
 )
 
 type StartTestSuite struct {
 	suite.Suite
 
-	waiter                  *mocks.Waiter
-	clusterNode             *mocks.ClusterNode
-	clusterNodeFactory      *mocks.ClusterNodeFactory
-	backgroundServer        *mocks.BackgroundServer
-	backgroundServerFactory *mocks.BackgroundServerFactory
+	waiter                  *cmdMocks.Waiter
+	clusterNode             *clusterMocks.ClusterNode
+	clusterNodeFactory      *clusterMocks.ClusterNodeFactory
+	backgroundServer        *apiMocks.BackgroundServer
+	backgroundServerFactory *apiMocks.BackgroundServerFactory
 }
 
 func (s *StartTestSuite) SetupTest() {
-	s.waiter = mocks.NewWaiter(s.T())
+	s.waiter = cmdMocks.NewWaiter(s.T())
 	s.waiter.EXPECT().Wait().Return()
 
-	s.clusterNode = mocks.NewClusterNode(s.T())
+	s.clusterNode = clusterMocks.NewClusterNode(s.T())
 	s.clusterNode.EXPECT().Start().Return(nil)
 	s.clusterNode.EXPECT().Close().Return(nil)
 
-	s.clusterNodeFactory = mocks.NewClusterNodeFactory(s.T())
+	s.clusterNodeFactory = clusterMocks.NewClusterNodeFactory(s.T())
 
-	s.backgroundServer = mocks.NewBackgroundServer(s.T())
+	s.backgroundServer = apiMocks.NewBackgroundServer(s.T())
 	s.backgroundServer.EXPECT().ListenAndServeInBackground().Return(nil)
 	s.backgroundServer.EXPECT().Shutdown(context.Background()).Return(nil)
 
-	s.backgroundServerFactory = mocks.NewBackgroundServerFactory(s.T())
+	s.backgroundServerFactory = apiMocks.NewBackgroundServerFactory(s.T())
 }
 
 func (s *StartTestSuite) TestStart() {
