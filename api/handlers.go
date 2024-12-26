@@ -17,7 +17,8 @@ func NewHandlers(clusterNode cluster.ClusterNode) Handlers {
 
 func (s *Handlers) Mux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/status", s.GetStatus)
+	mux.HandleFunc("GET /status", s.GetStatus)
+	mux.HandleFunc("PUT /vip", s.SetVIP)
 
 	return mux
 }

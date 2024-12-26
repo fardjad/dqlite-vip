@@ -45,7 +45,7 @@ func (s *GetStatusTestSuite) TestGetStatus_Healthy() {
 	s.Equal("application/json", response.Header().Get("Content-Type"))
 
 	var responseBody GetStatusResponseBody
-	json.Unmarshal(response.Body.Bytes(), &responseBody)
+	json.NewDecoder(response.Body).Decode(&responseBody)
 	s.Equal(&GetStatusResponseBody{
 		ID:             1,
 		LeaderID:       1,
