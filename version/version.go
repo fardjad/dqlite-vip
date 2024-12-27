@@ -1,9 +1,9 @@
-// Package version provides shared version information.
 package version
 
-var version string
+// git_version is set by the build script
+var git_version string = "unknown"
+var version string = "0.1.0"
 
-// Version is set by the build system.
 func Version() string {
-	return version
+	return version + " (" + git_version + ")"
 }

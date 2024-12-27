@@ -1,7 +1,7 @@
 set shell := ["/usr/bin/env", "bash", "-euo", "pipefail", "-c"]
 
 git_version := `git describe --tags --always --dirty --abbrev=10`
-version_ldflags := "-X 'fardjad.com/dqlite-vip/version.version=" + git_version + "'"
+version_ldflags := "-X 'fardjad.com/dqlite-vip/version.git_version=" + git_version + "'"
 
 base_docker_image_name := "dqlite-vip-base"
 static_docker_image_name := "dqlite-vip-static"
