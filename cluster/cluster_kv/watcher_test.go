@@ -33,8 +33,9 @@ func (s *WatcherTestSuite) TestWatch() {
 	s.ticker.Tick(stdTime.Now())
 
 	select {
-	case value := <-ch:
-		s.Equal("192.168.1.100", value)
+	case change := <-ch:
+		s.Equal("", change.Previous)
+		s.Equal("192.168.1.100", change.Current)
 	case <-stdTime.After(1 * stdTime.Second):
 		s.Fail("Timeout waiting for value")
 	}
@@ -43,8 +44,9 @@ func (s *WatcherTestSuite) TestWatch() {
 	s.ticker.Tick(stdTime.Now())
 
 	select {
-	case value := <-ch:
-		s.Equal("192.168.1.101", value)
+	case change := <-ch:
+		s.Equal("192.168.1.100", change.Previous)
+		s.Equal("192.168.1.101", change.Current)
 	case <-stdTime.After(1 * stdTime.Second):
 		s.Fail("Timeout waiting for value")
 	}

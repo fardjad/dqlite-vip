@@ -23,12 +23,12 @@ func (s *ChangeEmitterSuite) TestBasicSubscribeAndPublish() {
 	sub := s.emitter.Subscribe(key)
 	defer sub.Cancel()
 
-	go s.emitter.Publish(key, value)
+	change := Change{Previous: "", Current: value}
+	go s.emitter.Publish(key, change)
 
-	// Should receive the value
 	select {
 	case received := <-sub.Ch:
-		s.Equal(value, received)
+		s.Equal(change, received)
 	case <-time.After(time.Second):
 		s.Fail("Timeout waiting for value")
 	}
@@ -43,12 +43,13 @@ func (s *ChangeEmitterSuite) TestMultipleSubscribers() {
 	defer sub1.Cancel()
 	defer sub2.Cancel()
 
-	go s.emitter.Publish(key, value)
+	change := Change{Previous: "", Current: value}
+	go s.emitter.Publish(key, change)
 
-	for _, ch := range []chan string{sub1.Ch, sub2.Ch} {
+	for _, ch := range []chan Change{sub1.Ch, sub2.Ch} {
 		select {
 		case received := <-ch:
-			s.Equal(value, received)
+			s.Equal(change, received)
 		case <-time.After(time.Second):
 			s.Fail("Timeout waiting for value")
 		}
@@ -79,27 +80,29 @@ func (s *ChangeEmitterSuite) TestMultipleKeys() {
 	defer sub1.Cancel()
 	defer sub2.Cancel()
 
-	go s.emitter.Publish(key1, value1)
-	go s.emitter.Publish(key2, value2)
+	change1 := Change{Previous: "", Current: value1}
+	go s.emitter.Publish(key1, change1)
+	change2 := Change{Previous: "", Current: value2}
+	go s.emitter.Publish(key2, change2)
 
 	select {
 	case received := <-sub1.Ch:
-		s.Equal(value1, received)
+		s.Equal(change1, received)
 	case <-time.After(time.Second):
 		s.Fail("Timeout waiting for value1")
 	}
 
 	select {
 	case received := <-sub2.Ch:
-		s.Equal(value2, received)
+		s.Equal(change2, received)
 	case <-time.After(time.Second):
 		s.Fail("Timeout waiting for value2")
 	}
 }
 
 func (s *ChangeEmitterSuite) TestSetOfValueChannels() {
-	set := NewSetOfValueChannels()
-	ch := make(chan string)
+	set := NewSetOfChangeChannels()
+	ch := make(chan Change)
 
 	set.Add(ch)
 	s.True(set.Contains(ch))

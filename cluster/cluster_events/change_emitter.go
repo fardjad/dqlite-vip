@@ -6,54 +6,59 @@ import (
 
 type CancelFunc func()
 
-type SetOfValueChannels struct {
-	m map[chan string]struct{}
+type SetOfChangeChannels struct {
+	m map[chan Change]struct{}
 }
 
-func NewSetOfValueChannels() *SetOfValueChannels {
-	return &SetOfValueChannels{
-		m: make(map[chan string]struct{}),
+func NewSetOfChangeChannels() *SetOfChangeChannels {
+	return &SetOfChangeChannels{
+		m: make(map[chan Change]struct{}),
 	}
 }
 
-func (s *SetOfValueChannels) Add(ch chan string) {
+func (s *SetOfChangeChannels) Add(ch chan Change) {
 	s.m[ch] = struct{}{}
 }
 
-func (s *SetOfValueChannels) Delete(ch chan string) {
+func (s *SetOfChangeChannels) Delete(ch chan Change) {
 	delete(s.m, ch)
 }
 
-func (s *SetOfValueChannels) Contains(ch chan string) bool {
+func (s *SetOfChangeChannels) Contains(ch chan Change) bool {
 	_, ok := s.m[ch]
 	return ok
 }
 
-func (s *SetOfValueChannels) Values() []chan string {
-	values := make([]chan string, 0, len(s.m))
+func (s *SetOfChangeChannels) Values() []chan Change {
+	values := make([]chan Change, 0, len(s.m))
 	for ch := range s.m {
 		values = append(values, ch)
 	}
 	return values
 }
 
-func (s *SetOfValueChannels) Empty() bool {
+func (s *SetOfChangeChannels) Empty() bool {
 	return len(s.m) == 0
 }
 
+type Change struct {
+	Previous string
+	Current  string
+}
+
 type Subscription struct {
-	Ch     chan string
+	Ch     chan Change
 	Cancel CancelFunc
 }
 
 type ChangeEmitter struct {
 	mu            sync.RWMutex
-	Subscriptions map[string]*SetOfValueChannels
+	Subscriptions map[string]*SetOfChangeChannels
 }
 
 func NewChangeEmitter() *ChangeEmitter {
 	return &ChangeEmitter{
-		Subscriptions: make(map[string]*SetOfValueChannels),
+		Subscriptions: make(map[string]*SetOfChangeChannels),
 	}
 }
 
@@ -61,7 +66,7 @@ func (w *ChangeEmitter) Subscribe(key string) *Subscription {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	ch := make(chan string)
+	ch := make(chan Change)
 	sub := &Subscription{
 		Ch: ch,
 		Cancel: func() {
@@ -79,14 +84,14 @@ func (w *ChangeEmitter) Subscribe(key string) *Subscription {
 	}
 
 	if _, ok := w.Subscriptions[key]; !ok {
-		w.Subscriptions[key] = NewSetOfValueChannels()
+		w.Subscriptions[key] = NewSetOfChangeChannels()
 	}
 	w.Subscriptions[key].Add(ch)
 
 	return sub
 }
 
-func (w *ChangeEmitter) Publish(key string, value string) {
+func (w *ChangeEmitter) Publish(key string, change Change) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 
@@ -95,6 +100,6 @@ func (w *ChangeEmitter) Publish(key string, value string) {
 	}
 
 	for _, ch := range w.Subscriptions[key].Values() {
-		ch <- value
+		ch <- change
 	}
 }

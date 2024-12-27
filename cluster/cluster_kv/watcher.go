@@ -25,18 +25,20 @@ func NewWatcher(clusterNode cluster.ClusterNode, ticker time.Ticker) *Watcher {
 	}
 }
 
-func (w *Watcher) Watch(key string) (chan string, cluster_events.CancelFunc, error) {
+func (w *Watcher) Watch(key string) (chan cluster_events.Change, cluster_events.CancelFunc, error) {
 	subcription := w.changeEmitter.Subscribe(key)
 
 	go func() {
 		for range w.ticker.C() {
-			value, err := w.clusterNode.GetString(key)
+			currentValue, err := w.clusterNode.GetString(key)
 			if err != nil {
 				log.Printf("Failed to get value for key %s: %v", key, err)
 			}
-			if value != w.kv[key] {
-				w.kv[key] = value
-				w.changeEmitter.Publish(key, value)
+			previousValue := w.kv[key]
+			if currentValue != previousValue {
+				w.kv[key] = currentValue
+				change := cluster_events.Change{Previous: previousValue, Current: currentValue}
+				w.changeEmitter.Publish(key, change)
 			}
 		}
 	}()
