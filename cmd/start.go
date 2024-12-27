@@ -9,9 +9,9 @@ import (
 )
 
 type start struct {
-	waiter                  Waiter
-	clusterNodeFactory      cluster.ClusterNodeFactory
-	backgroundServerFactory api.BackgroundServerFactory
+	waiter                      Waiter
+	clusterNodeFactoryFunc      cluster.ClusterNodeFactoryFunc
+	backgroundServerFactoryFunc api.BackgroundServerFactoryFunc
 
 	// flags
 	dataDir     string
@@ -25,13 +25,13 @@ func (c *start) runE(cmd *cobra.Command, args []string) error {
 	if c.join != "" {
 		join = append(join, c.join)
 	}
-	clusterNode, err := c.clusterNodeFactory.NewClusterNode(c.dataDir, c.bindCluster, join)
+	clusterNode, err := c.clusterNodeFactoryFunc(c.dataDir, c.bindCluster, join)
 	if err != nil {
 		return err
 	}
 
 	handlers := api.NewHandlers(clusterNode)
-	server := c.backgroundServerFactory.NewServer(c.bindHttp, handlers.Mux())
+	server := c.backgroundServerFactoryFunc(c.bindHttp, handlers.Mux())
 
 	err = server.ListenAndServeInBackground()
 	if err != nil {

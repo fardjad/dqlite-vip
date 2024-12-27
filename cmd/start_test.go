@@ -15,11 +15,11 @@ import (
 type StartTestSuite struct {
 	suite.Suite
 
-	waiter                  *cmdMocks.Waiter
-	clusterNode             *clusterMocks.ClusterNode
-	clusterNodeFactory      *clusterMocks.ClusterNodeFactory
-	backgroundServer        *apiMocks.BackgroundServer
-	backgroundServerFactory *apiMocks.BackgroundServerFactory
+	waiter                      *cmdMocks.Waiter
+	clusterNode                 *clusterMocks.ClusterNode
+	clusterNodeFactoryFunc      *clusterMocks.ClusterNodeFactoryFunc
+	backgroundServer            *apiMocks.BackgroundServer
+	backgroundServerFactoryFunc *apiMocks.BackgroundServerFactoryFunc
 }
 
 func (s *StartTestSuite) SetupTest() {
@@ -30,27 +30,27 @@ func (s *StartTestSuite) SetupTest() {
 	s.clusterNode.EXPECT().Start(mock.Anything).Return(nil)
 	s.clusterNode.EXPECT().Close(mock.Anything).Return(nil)
 
-	s.clusterNodeFactory = clusterMocks.NewClusterNodeFactory(s.T())
+	s.clusterNodeFactoryFunc = clusterMocks.NewClusterNodeFactoryFunc(s.T())
 
 	s.backgroundServer = apiMocks.NewBackgroundServer(s.T())
 	s.backgroundServer.EXPECT().ListenAndServeInBackground().Return(nil)
 	s.backgroundServer.EXPECT().Shutdown(context.Background()).Return(nil)
 
-	s.backgroundServerFactory = apiMocks.NewBackgroundServerFactory(s.T())
+	s.backgroundServerFactoryFunc = apiMocks.NewBackgroundServerFactoryFunc(s.T())
 }
 
 func (s *StartTestSuite) TestStart() {
-	s.clusterNodeFactory.EXPECT().NewClusterNode(
+	s.clusterNodeFactoryFunc.EXPECT().Execute(
 		"/tmp/data",
 		"127.0.0.1:9000",
 		[]string{},
 	).Return(s.clusterNode, nil)
-	s.backgroundServerFactory.EXPECT().NewServer("127.0.0.1:8080", mock.Anything).Return(s.backgroundServer)
+	s.backgroundServerFactoryFunc.EXPECT().Execute("127.0.0.1:8080", mock.Anything).Return(s.backgroundServer)
 
 	startCmd := &start{
-		waiter:                  s.waiter,
-		clusterNodeFactory:      s.clusterNodeFactory,
-		backgroundServerFactory: s.backgroundServerFactory,
+		waiter:                      s.waiter,
+		clusterNodeFactoryFunc:      s.clusterNodeFactoryFunc.Execute,
+		backgroundServerFactoryFunc: s.backgroundServerFactoryFunc.Execute,
 	}
 
 	cmd := startCmd.command()
@@ -65,23 +65,23 @@ func (s *StartTestSuite) TestStart() {
 
 	s.waiter.AssertExpectations(s.T())
 	s.clusterNode.AssertExpectations(s.T())
-	s.clusterNodeFactory.AssertExpectations(s.T())
+	s.clusterNodeFactoryFunc.AssertExpectations(s.T())
 	s.backgroundServer.AssertExpectations(s.T())
-	s.backgroundServerFactory.AssertExpectations(s.T())
+	s.backgroundServerFactoryFunc.AssertExpectations(s.T())
 }
 
 func (s *StartTestSuite) TestStartWithJoin() {
-	s.clusterNodeFactory.EXPECT().NewClusterNode(
+	s.clusterNodeFactoryFunc.EXPECT().Execute(
 		"/tmp/data",
 		"127.0.0.1:9000",
 		[]string{"127.0.0.1:9001"},
 	).Return(s.clusterNode, nil)
-	s.backgroundServerFactory.EXPECT().NewServer("127.0.0.1:8080", mock.Anything).Return(s.backgroundServer)
+	s.backgroundServerFactoryFunc.EXPECT().Execute("127.0.0.1:8080", mock.Anything).Return(s.backgroundServer)
 
 	startCmd := &start{
-		waiter:                  s.waiter,
-		clusterNodeFactory:      s.clusterNodeFactory,
-		backgroundServerFactory: s.backgroundServerFactory,
+		waiter:                      s.waiter,
+		clusterNodeFactoryFunc:      s.clusterNodeFactoryFunc.Execute,
+		backgroundServerFactoryFunc: s.backgroundServerFactoryFunc.Execute,
 	}
 
 	cmd := startCmd.command()
@@ -97,9 +97,9 @@ func (s *StartTestSuite) TestStartWithJoin() {
 
 	s.waiter.AssertExpectations(s.T())
 	s.clusterNode.AssertExpectations(s.T())
-	s.clusterNodeFactory.AssertExpectations(s.T())
+	s.clusterNodeFactoryFunc.AssertExpectations(s.T())
 	s.backgroundServer.AssertExpectations(s.T())
-	s.backgroundServerFactory.AssertExpectations(s.T())
+	s.backgroundServerFactoryFunc.AssertExpectations(s.T())
 }
 
 func TestStartTestSuite(t *testing.T) {

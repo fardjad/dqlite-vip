@@ -21,6 +21,4 @@ type ClusterNode interface {
 	GetString(key string) (string, error)
 }
 
-type ClusterNodeFactory interface {
-	NewClusterNode(dataDir string, bindCluster string, join []string) (ClusterNode, error)
-}
+type ClusterNodeFactoryFunc func(dataDir string, bindCluster string, join []string) (ClusterNode, error)

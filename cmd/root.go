@@ -24,9 +24,9 @@ func (root *Root) Command() *cobra.Command {
 	cmd.Run = root.run
 
 	start := &start{
-		waiter:                  &SigTermWaiter{},
-		clusterNodeFactory:      &cluster.DqliteClusterNodeFactory{},
-		backgroundServerFactory: &api.BackgroundHttpServerFactory{},
+		waiter:                      &SigTermWaiter{},
+		clusterNodeFactoryFunc:      cluster.NewClusterNode,
+		backgroundServerFactoryFunc: api.NewBackgroundHttpServer,
 	}
 	cmd.AddCommand(start.command())
 

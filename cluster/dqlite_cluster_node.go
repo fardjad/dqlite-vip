@@ -10,9 +10,7 @@ import (
 	"github.com/canonical/go-dqlite/v2/app"
 )
 
-type DqliteClusterNodeFactory struct{}
-
-func (f *DqliteClusterNodeFactory) NewClusterNode(dataDir string, bindCluster string, join []string) (ClusterNode, error) {
+func NewClusterNode(dataDir string, bindCluster string, join []string) (ClusterNode, error) {
 	return &DqliteClusterNode{
 		dataDir:     dataDir,
 		bindCluster: bindCluster,

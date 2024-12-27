@@ -7,17 +7,24 @@ import (
 	"net/http"
 )
 
+type BackgroundServerFactoryFunc func(addr string, handler http.Handler) BackgroundServer
+
 type BackgroundServer interface {
 	ListenAndServeInBackground() error
 	Shutdown(ctx context.Context) error
 }
 
-type BackgroundServerFactory interface {
-	NewServer(addr string, handler http.Handler) BackgroundServer
-}
-
 type BackgroundHttpServer struct {
 	*http.Server
+}
+
+func NewBackgroundHttpServer(addr string, handler http.Handler) BackgroundServer {
+	return &BackgroundHttpServer{
+		&http.Server{
+			Addr:    addr,
+			Handler: handler,
+		},
+	}
 }
 
 func (s *BackgroundHttpServer) ListenAndServeInBackground() error {
@@ -34,15 +41,4 @@ func (s *BackgroundHttpServer) ListenAndServeInBackground() error {
 
 func (s *BackgroundHttpServer) Shutdown(ctx context.Context) error {
 	return s.Server.Shutdown(ctx)
-}
-
-type BackgroundHttpServerFactory struct{}
-
-func (f *BackgroundHttpServerFactory) NewServer(addr string, handler http.Handler) BackgroundServer {
-	return &BackgroundHttpServer{
-		&http.Server{
-			Addr:    addr,
-			Handler: handler,
-		},
-	}
 }
