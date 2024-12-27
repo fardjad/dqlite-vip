@@ -10,7 +10,7 @@ import (
 	"github.com/canonical/go-dqlite/v2/app"
 )
 
-func NewClusterNode(dataDir string, bindCluster string, join []string) (ClusterNode, error) {
+func NewDqliteClusterNode(dataDir string, bindCluster string, join []string) (ClusterNode, error) {
 	return &DqliteClusterNode{
 		dataDir:     dataDir,
 		bindCluster: bindCluster,
