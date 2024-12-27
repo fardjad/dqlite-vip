@@ -1,4 +1,4 @@
-package change_emitter
+package cluster_events
 
 import (
 	"testing"
@@ -17,8 +17,8 @@ func (s *ChangeEmitterSuite) SetupTest() {
 }
 
 func (s *ChangeEmitterSuite) TestBasicSubscribeAndPublish() {
-	key := Key("test-key")
-	value := Value("test-value")
+	key := "test-key"
+	value := "test-value"
 
 	sub := s.emitter.Subscribe(key)
 	defer sub.Cancel()
@@ -35,8 +35,8 @@ func (s *ChangeEmitterSuite) TestBasicSubscribeAndPublish() {
 }
 
 func (s *ChangeEmitterSuite) TestMultipleSubscribers() {
-	key := Key("test-key")
-	value := Value("test-value")
+	key := "test-key"
+	value := "test-value"
 
 	sub1 := s.emitter.Subscribe(key)
 	sub2 := s.emitter.Subscribe(key)
@@ -45,7 +45,7 @@ func (s *ChangeEmitterSuite) TestMultipleSubscribers() {
 
 	go s.emitter.Publish(key, value)
 
-	for _, ch := range []chan Value{sub1.Ch, sub2.Ch} {
+	for _, ch := range []chan string{sub1.Ch, sub2.Ch} {
 		select {
 		case received := <-ch:
 			s.Equal(value, received)
@@ -56,7 +56,7 @@ func (s *ChangeEmitterSuite) TestMultipleSubscribers() {
 }
 
 func (s *ChangeEmitterSuite) TestCancellation() {
-	key := Key("test-key")
+	key := "test-key"
 	sub := s.emitter.Subscribe(key)
 
 	sub.Cancel()
@@ -64,15 +64,15 @@ func (s *ChangeEmitterSuite) TestCancellation() {
 	_, ok := <-sub.Ch
 	s.False(ok, "Channel should be closed")
 
-	_, exists := s.emitter.subscriptions[key]
+	_, exists := s.emitter.Subscriptions[key]
 	s.False(exists, "Subscription should be removed after cancellation")
 }
 
 func (s *ChangeEmitterSuite) TestMultipleKeys() {
-	key1 := Key("key1")
-	key2 := Key("key2")
-	value1 := Value("value1")
-	value2 := Value("value2")
+	key1 := "key1"
+	key2 := "key2"
+	value1 := "value1"
+	value2 := "value2"
 
 	sub1 := s.emitter.Subscribe(key1)
 	sub2 := s.emitter.Subscribe(key2)
@@ -99,7 +99,7 @@ func (s *ChangeEmitterSuite) TestMultipleKeys() {
 
 func (s *ChangeEmitterSuite) TestSetOfValueChannels() {
 	set := NewSetOfValueChannels()
-	ch := make(chan Value)
+	ch := make(chan string)
 
 	set.Add(ch)
 	s.True(set.Contains(ch))
