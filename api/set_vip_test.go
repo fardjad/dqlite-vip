@@ -35,8 +35,6 @@ func (s *SetVIPTestSuite) TestSetVIP() {
 	response := httptest.NewRecorder()
 	s.mux.ServeHTTP(response, request)
 
-	s.clusterNode.AssertExpectations(s.T())
-
 	s.Equal(http.StatusAccepted, response.Code)
 	s.Equal("application/json", response.Header().Get("Content-Type"))
 

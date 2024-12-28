@@ -8,24 +8,15 @@ import (
 	"fardjad.com/dqlite-vip/time"
 )
 
-type Watcher struct {
+// Implements [Watcher]
+type ClusterNodeWatcher struct {
 	clusterNode   cluster.ClusterNode
 	kv            map[string]string
 	changeEmitter *cluster_events.ChangeEmitter
 	ticker        time.Ticker
 }
 
-func NewWatcher(clusterNode cluster.ClusterNode, ticker time.Ticker) *Watcher {
-	return &Watcher{
-		clusterNode: clusterNode,
-		ticker:      ticker,
-
-		kv:            make(map[string]string),
-		changeEmitter: cluster_events.NewChangeEmitter(),
-	}
-}
-
-func (w *Watcher) Watch(key string) (chan cluster_events.Change, cluster_events.CancelFunc, error) {
+func (w *ClusterNodeWatcher) Watch(key string) (chan cluster_events.Change, cluster_events.CancelFunc, error) {
 	subcription := w.changeEmitter.Subscribe(key)
 
 	go func() {
@@ -47,4 +38,15 @@ func (w *Watcher) Watch(key string) (chan cluster_events.Change, cluster_events.
 		w.ticker.Stop()
 		subcription.Cancel()
 	}, nil
+}
+
+// Implements [WatcherFactoryFunc]
+func NewClusterNodeWatcher(clusterNode cluster.ClusterNode, ticker time.Ticker) Watcher {
+	return &ClusterNodeWatcher{
+		clusterNode: clusterNode,
+		ticker:      ticker,
+
+		kv:            make(map[string]string),
+		changeEmitter: cluster_events.NewChangeEmitter(),
+	}
 }

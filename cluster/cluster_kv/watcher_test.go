@@ -14,13 +14,13 @@ type WatcherTestSuite struct {
 	suite.Suite
 	clusterNode *clusterMocks.ClusterNode
 	ticker      *time.FakeTicker
-	watcher     *Watcher
+	watcher     Watcher
 }
 
 func (s *WatcherTestSuite) SetupTest() {
 	s.clusterNode = clusterMocks.NewClusterNode(s.T())
 	s.ticker = time.NewFakeTicker()
-	s.watcher = NewWatcher(s.clusterNode, s.ticker)
+	s.watcher = NewClusterNodeWatcher(s.clusterNode, s.ticker)
 }
 
 func (s *WatcherTestSuite) TestWatch() {

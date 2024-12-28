@@ -2,11 +2,7 @@ package time
 
 import "time"
 
-type Ticker interface {
-	C() <-chan time.Time
-	Stop()
-}
-
+// Implements [Ticker]
 type realTicker struct {
 	t *time.Ticker
 }
@@ -19,6 +15,12 @@ func (t *realTicker) Stop() {
 	t.t.Stop()
 }
 
+// Implements [TickerFactoryFunc]
+func NewRealTicker(d time.Duration) Ticker {
+	return &realTicker{t: time.NewTicker(d)}
+}
+
+// Implements [Ticker]
 type FakeTicker struct {
 	c chan time.Time
 }
@@ -36,8 +38,4 @@ func (t *FakeTicker) Tick(now time.Time) {
 
 func NewFakeTicker() *FakeTicker {
 	return &FakeTicker{c: make(chan time.Time)}
-}
-
-func NewRealTicker(d time.Duration) Ticker {
-	return &realTicker{t: time.NewTicker(d)}
 }

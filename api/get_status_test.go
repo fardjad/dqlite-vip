@@ -41,8 +41,6 @@ func (s *GetStatusTestSuite) TestGetStatus_Healthy() {
 	response := httptest.NewRecorder()
 	s.mux.ServeHTTP(response, request)
 
-	s.clusterNode.AssertExpectations(s.T())
-
 	s.Equal(http.StatusOK, response.Code)
 	s.Equal("application/json", response.Header().Get("Content-Type"))
 

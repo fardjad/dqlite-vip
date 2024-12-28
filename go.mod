@@ -4,9 +4,11 @@ go 1.23.4
 
 require (
 	github.com/canonical/go-dqlite/v2 v2.0.0
+	github.com/j-keck/arping v1.0.3
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
 	github.com/vektra/mockery/v2 v2.50.1
+	github.com/vishvananda/netlink v1.3.0
 	golang.org/x/sys v0.28.0
 )
 
@@ -38,6 +40,7 @@ require (
 	github.com/spf13/viper v1.15.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
+	github.com/vishvananda/netns v0.0.4 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/term v0.5.0 // indirect
