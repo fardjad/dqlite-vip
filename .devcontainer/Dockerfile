@@ -5,25 +5,25 @@ FROM ubuntu:noble
 # Install dependencies
 
 RUN apt-get update && apt-get install -y \
-    software-properties-common \
-    apt-utils \
-    build-essential \
-    automake \
-    libtool \
-    gettext \
-    autopoint \
-    tclsh \
-    tcl \
-    libsqlite3-dev \
-    pkg-config \
-    git \
-    curl \
-    locales \
-    iproute2 \
-    iputils-ping \
-    iputils-arping \
-    sudo \
-    && rm -rf /var/lib/apt/lists/*
+  software-properties-common \
+  apt-utils \
+  build-essential \
+  automake \
+  libtool \
+  gettext \
+  autopoint \
+  tclsh \
+  tcl \
+  libsqlite3-dev \
+  pkg-config \
+  git \
+  curl \
+  locales \
+  iproute2 \
+  iputils-ping \
+  iputils-arping \
+  sudo \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN sudo locale-gen "en_US.UTF-8" && sudo dpkg-reconfigure locales
 
@@ -47,9 +47,9 @@ EOF
 RUN bash /delete-default-user.sh && rm /delete-default-user.sh
 
 RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
+  && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+  && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+  && chmod 0440 /etc/sudoers.d/$USERNAME
 USER $USERNAME
 WORKDIR /home/$USERNAME
 ENV HOME=/home/$USERNAME
@@ -57,8 +57,8 @@ ENV HOME=/home/$USERNAME
 # Install Homebrew
 
 RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
-    && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" \
-    brew install gcc
+  && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" \
+  brew install gcc
 
 # Dotfiles setup
 
@@ -152,3 +152,36 @@ starship preset plain-text-symbols > \$HOME/.starship/config.toml
 printf "\\n[container]\\ndisabled = true\\n" >> \$HOME/.starship/config.toml
 EOF
 RUN bash $HOME/setup-starship.sh && sudo rm $HOME/setup-starship.sh
+
+COPY <<EOF $HOME/setup-tmux-xpanes.sh
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+brew install tmux-xpanes
+EOF
+RUN bash $HOME/setup-tmux-xpanes.sh && sudo rm $HOME/setup-tmux-xpanes.sh
+
+COPY <<EOF $HOME/setup-viddy.sh
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+brew install viddy
+EOF
+RUN bash $HOME/setup-viddy.sh && sudo rm $HOME/setup-viddy.sh
+
+COPY <<EOF $HOME/setup-jq.sh
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+brew install jq
+EOF
+RUN bash $HOME/setup-jq.sh && sudo rm $HOME/setup-jq.sh
