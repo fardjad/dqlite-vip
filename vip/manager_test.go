@@ -5,70 +5,113 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/suite"
-
-	"fardjad.com/dqlite-vip/cluster/cluster_events"
+	clusterMocks "fardjad.com/dqlite-vip/mocks/cluster"
+	vipMocks "fardjad.com/dqlite-vip/mocks/vip"
+	"fardjad.com/dqlite-vip/utils"
 	"fardjad.com/dqlite-vip/vip"
 
-	mockCluster "fardjad.com/dqlite-vip/mocks/cluster"
-	mockClusterEvents "fardjad.com/dqlite-vip/mocks/cluster/cluster_events"
-	mockClusterKV "fardjad.com/dqlite-vip/mocks/cluster/cluster_kv"
-	mockVip "fardjad.com/dqlite-vip/mocks/vip"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 )
 
 type ManagerTestSuite struct {
 	suite.Suite
-	clusterNode  *mockCluster.ClusterNode
-	watcher      *mockClusterKV.Watcher
-	cancelFunc   *mockClusterEvents.CancelFunc
-	configurator *mockVip.Configurator
-	manager      vip.Manager
+
+	clusterNode  *clusterMocks.ClusterNode
+	ticker       *utils.FakeTicker
+	configurator *vipMocks.Configurator
+	manager      *vipMocks.Manager
 }
 
 func (s *ManagerTestSuite) SetupTest() {
-	s.clusterNode = mockCluster.NewClusterNode(s.T())
-	s.watcher = mockClusterKV.NewWatcher(s.T())
-	s.cancelFunc = mockClusterEvents.NewCancelFunc(s.T())
-	s.configurator = mockVip.NewConfigurator(s.T())
-	s.manager = vip.NewManager(s.clusterNode, s.watcher, s.configurator, "dummy")
+	s.clusterNode = clusterMocks.NewClusterNode(s.T())
+	s.ticker = utils.NewFakeTicker()
+	s.configurator = vipMocks.NewConfigurator(s.T())
+	s.manager = vipMocks.NewManager(s.T())
 }
 
-func (s *ManagerTestSuite) TestManager_WhenClusterNodeIsLeader() {
-	s.clusterNode.EXPECT().IsLeader(mock.Anything).Return(true)
+func (s *ManagerTestSuite) TestManager() {
+	m := vip.NewManager(s.clusterNode, s.ticker, s.configurator, "dummy")
+	m.Start(context.Background())
+	defer m.Stop()
 
-	changeChannel := make(chan cluster_events.Change)
-	s.cancelFunc.EXPECT().Execute().RunAndReturn(func() { close(changeChannel) })
-	s.watcher.EXPECT().Watch("vip").Return(changeChannel, s.cancelFunc.Execute, nil)
+	var wg utils.WaitGroupWithTimeout
 
-	s.configurator.EXPECT().RemoveVIP("dummy", "192.168.1.100").Return(nil)
-	s.configurator.EXPECT().AddVIP("dummy", "192.168.1.101").Return(nil)
+	// Node is the leader and VIP is not set
+	wg.Add(1)
+	s.clusterNode.EXPECT().IsLeader(mock.Anything).RunAndReturn(func(_ context.Context) bool {
+		wg.Done()
+		return true
+	}).Once()
+	wg.Add(1)
+	s.clusterNode.EXPECT().GetString("vip").RunAndReturn(func(_ string) (string, error) {
+		wg.Done()
+		return "", nil
+	}).Once()
+	s.ticker.Tick(time.Now())
+	s.True(wg.WaitWithTimeout(1 * time.Second))
 
-	s.NoError(s.manager.Start(context.Background()))
-	defer s.manager.Stop()
+	// Set VIP for the first time
+	wg.Add(1)
+	s.clusterNode.EXPECT().IsLeader(mock.Anything).RunAndReturn(func(_ context.Context) bool {
+		wg.Done()
+		return true
+	}).Once()
+	wg.Add(1)
+	s.clusterNode.EXPECT().GetString("vip").RunAndReturn(func(_ string) (string, error) {
+		wg.Done()
+		return "192.168.1.100/24", nil
+	}).Once()
+	wg.Add(1)
+	s.configurator.EXPECT().EnsureVIP("dummy", "192.168.1.100/24").RunAndReturn(func(_, _ string) error {
+		wg.Done()
+		return nil
+	}).Once()
+	s.ticker.Tick(time.Now())
+	s.True(wg.WaitWithTimeout(1 * time.Second))
 
-	select {
-	case changeChannel <- cluster_events.Change{Previous: "192.168.1.100", Current: "192.168.1.101"}:
-	case <-time.After(1 * time.Second):
-		s.Fail("Timeout waiting for changeChannel")
-	}
-}
+	// Change VIP
+	wg.Add(1)
+	s.clusterNode.EXPECT().IsLeader(mock.Anything).RunAndReturn(func(_ context.Context) bool {
+		wg.Done()
+		return true
+	}).Once()
+	wg.Add(1)
+	s.clusterNode.EXPECT().GetString("vip").RunAndReturn(func(_ string) (string, error) {
+		wg.Done()
+		return "192.168.1.101/24", nil
+	}).Once()
+	wg.Add(1)
+	s.configurator.EXPECT().RemoveVIP("dummy", "192.168.1.100/24").RunAndReturn(func(_, _ string) error {
+		wg.Done()
+		return nil
+	}).Once()
+	wg.Add(1)
+	s.configurator.EXPECT().EnsureVIP("dummy", "192.168.1.101/24").RunAndReturn(func(_, _ string) error {
+		wg.Done()
+		return nil
+	}).Once()
+	s.ticker.Tick(time.Now())
+	s.True(wg.WaitWithTimeout(1 * time.Second))
 
-func (s *ManagerTestSuite) TestManager_WhenClusterNodeIsNotLeader() {
-	s.clusterNode.EXPECT().IsLeader(mock.Anything).Return(false)
-
-	changeChannel := make(chan cluster_events.Change)
-	s.cancelFunc.EXPECT().Execute().RunAndReturn(func() { close(changeChannel) })
-	s.watcher.EXPECT().Watch("vip").Return(changeChannel, s.cancelFunc.Execute, nil)
-
-	s.NoError(s.manager.Start(context.Background()))
-	defer s.manager.Stop()
-
-	select {
-	case changeChannel <- cluster_events.Change{Previous: "192.168.1.100", Current: "192.168.1.101"}:
-	case <-time.After(1 * time.Second):
-		s.Fail("Timeout waiting for changeChannel")
-	}
+	// Node is no longer the leader
+	wg.Add(1)
+	s.clusterNode.EXPECT().IsLeader(mock.Anything).RunAndReturn(func(_ context.Context) bool {
+		wg.Done()
+		return false
+	}).Once()
+	wg.Add(1)
+	s.clusterNode.EXPECT().GetString("vip").RunAndReturn(func(_ string) (string, error) {
+		wg.Done()
+		return "192.168.1.101/24", nil
+	}).Once()
+	wg.Add(1)
+	s.configurator.EXPECT().RemoveVIP("dummy", "192.168.1.101/24").RunAndReturn(func(_, _ string) error {
+		wg.Done()
+		return nil
+	})
+	s.ticker.Tick(time.Now())
+	s.True(wg.WaitWithTimeout(1 * time.Second))
 }
 
 func TestManagerTestSuite(t *testing.T) {

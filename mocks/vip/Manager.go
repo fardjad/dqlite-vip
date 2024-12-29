@@ -22,21 +22,8 @@ func (_m *Manager) EXPECT() *Manager_Expecter {
 }
 
 // Start provides a mock function with given fields: ctx
-func (_m *Manager) Start(ctx context.Context) error {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Start")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
+func (_m *Manager) Start(ctx context.Context) {
+	_m.Called(ctx)
 }
 
 // Manager_Start_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Start'
@@ -57,13 +44,13 @@ func (_c *Manager_Start_Call) Run(run func(ctx context.Context)) *Manager_Start_
 	return _c
 }
 
-func (_c *Manager_Start_Call) Return(_a0 error) *Manager_Start_Call {
-	_c.Call.Return(_a0)
+func (_c *Manager_Start_Call) Return() *Manager_Start_Call {
+	_c.Call.Return()
 	return _c
 }
 
-func (_c *Manager_Start_Call) RunAndReturn(run func(context.Context) error) *Manager_Start_Call {
-	_c.Call.Return(run)
+func (_c *Manager_Start_Call) RunAndReturn(run func(context.Context)) *Manager_Start_Call {
+	_c.Run(run)
 	return _c
 }
 

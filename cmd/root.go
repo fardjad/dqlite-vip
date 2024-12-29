@@ -3,7 +3,9 @@ package cmd
 import (
 	"fardjad.com/dqlite-vip/api"
 	"fardjad.com/dqlite-vip/cluster"
+	"fardjad.com/dqlite-vip/utils"
 	"fardjad.com/dqlite-vip/version"
+	"fardjad.com/dqlite-vip/vip"
 	"github.com/spf13/cobra"
 )
 
@@ -27,6 +29,9 @@ func (root *Root) Command() *cobra.Command {
 		waiter:                      &SigTermWaiter{},
 		clusterNodeFactoryFunc:      cluster.NewDqliteClusterNode,
 		backgroundServerFactoryFunc: api.NewBackgroundHttpServer,
+		tickerFactoryFunc:           utils.NewBetterTicker,
+		configuratorFactoryFunc:     vip.NewConfigurator,
+		vipManagerFactoryFunc:       vip.NewManager,
 	}
 	cmd.AddCommand(start.command())
 

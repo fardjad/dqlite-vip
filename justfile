@@ -144,13 +144,13 @@ run-cluster:
     #!/usr/bin/env bash
     set -e
 
-    rm -rf /tmp/dqlite-vip
+    sudo rm -rf /tmp/dqlite-vip
     
     just build-static > /dev/null
 
-    ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/1 --bind-cluster 127.0.0.1:8001 --bind-http 127.0.0.1:9901 & PID1=$!
-    ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/2 --bind-cluster 127.0.0.1:8002 --bind-http 127.0.0.1:9902 --join 127.0.0.1:8001 & PID2=$!
-    ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/3 --bind-cluster 127.0.0.1:8003 --bind-http 127.0.0.1:9903 --join 127.0.0.1:8001 & PID3=$!
+    sudo ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/1 --bind-cluster 127.0.0.1:8001 --bind-http 127.0.0.1:9901 --iface dummy01 & PID1=$!
+    sudo ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/2 --bind-cluster 127.0.0.1:8002 --bind-http 127.0.0.1:9902 --join 127.0.0.1:8001 --iface dummy02 & PID2=$!
+    sudo ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/3 --bind-cluster 127.0.0.1:8003 --bind-http 127.0.0.1:9903 --join 127.0.0.1:8001 --iface dummy03 & PID3=$!
 
     cleanup() {
         echo "Shutting down..."
@@ -175,13 +175,31 @@ run-cluster-xpanes:
     #!/usr/bin/env bash
     set -e
 
-    rm -rf /tmp/dqlite-vip
+    sudo rm -rf /tmp/dqlite-vip
     
     just build-static > /dev/null
 
     history -c
-    CMD1="./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/1 --bind-cluster 127.0.0.1:8001 --bind-http 127.0.0.1:9901"
-    CMD2="./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/2 --bind-cluster 127.0.0.1:8002 --bind-http 127.0.0.1:9902 --join 127.0.0.1:8001"
-    CMD3="./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/3 --bind-cluster 127.0.0.1:8003 --bind-http 127.0.0.1:9903 --join 127.0.0.1:8001"
+    CMD1="sudo ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/1 --bind-cluster 127.0.0.1:8001 --bind-http 127.0.0.1:9901 --iface dummy01"
+    CMD2="sudo ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/2 --bind-cluster 127.0.0.1:8002 --bind-http 127.0.0.1:9902 --join 127.0.0.1:8001 --iface dummy02"
+    CMD3="sudo ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/3 --bind-cluster 127.0.0.1:8003 --bind-http 127.0.0.1:9903 --join 127.0.0.1:8001 --iface dummy03"
     
     xpanes --cols=3 --desync -e "$CMD1" "$CMD2" "$CMD3"
+    
+setup-interfaces:
+    #!/usr/bin/env bash
+
+    sudo modprobe dummy
+
+    sudo ip link delete dummy01 2>/dev/null || true
+    sudo ip link delete dummy02 2>/dev/null || true
+    sudo ip link delete dummy03 2>/dev/null || true
+
+    sudo ip link add dummy01 type dummy
+    sudo ip link add dummy02 type dummy
+    sudo ip link add dummy03 type dummy
+
+set-vip:
+    #!/usr/bin/env bash
+
+    curl -XPUT -d '{"vip":"192.168.1.101/24"}' http://localhost:9901/vip

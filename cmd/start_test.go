@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 	"testing"
-	stdTime "time"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
@@ -11,10 +11,10 @@ import (
 
 	apiMocks "fardjad.com/dqlite-vip/mocks/api"
 	clusterMocks "fardjad.com/dqlite-vip/mocks/cluster"
-	clusterKVMocks "fardjad.com/dqlite-vip/mocks/cluster/cluster_kv"
 	cmdMocks "fardjad.com/dqlite-vip/mocks/cmd"
-	timeMocks "fardjad.com/dqlite-vip/mocks/time"
+	utilsMocks "fardjad.com/dqlite-vip/mocks/utils"
 	vipMocks "fardjad.com/dqlite-vip/mocks/vip"
+	"fardjad.com/dqlite-vip/utils"
 )
 
 const DATA_DIR = "/tmp/data"
@@ -48,30 +48,25 @@ func (s *StartTestSuite) SetupTest() {
 	s.backgroundServerFactoryFunc = apiMocks.NewBackgroundServerFactoryFunc(s.T())
 	s.backgroundServerFactoryFunc.EXPECT().Execute(BIND_HTTP, mock.Anything).Return(backgroundServer)
 
-	ticker := timeMocks.NewTicker(s.T())
-	tickerFactoryFunc := timeMocks.NewTickerFactoryFunc(s.T())
-	tickerFactoryFunc.EXPECT().Execute(stdTime.Second).Return(ticker)
-
-	watcher := clusterKVMocks.NewWatcher(s.T())
-	watcherFactoryFunc := clusterKVMocks.NewWatcherFactoryFunc(s.T())
-	watcherFactoryFunc.EXPECT().Execute(s.clusterNode, ticker).Return(watcher)
+	ticker := utils.NewFakeTicker()
+	tickerFactoryFunc := utilsMocks.NewBetterTickerFactoryFunc(s.T())
+	tickerFactoryFunc.EXPECT().Execute(time.Second).Return(ticker)
 
 	configurator := vipMocks.NewConfigurator(s.T())
 	configuratorFactoryFunc := vipMocks.NewConfiguratorFactoryFunc(s.T())
 	configuratorFactoryFunc.EXPECT().Execute(5).Return(configurator)
 
 	vipManager := vipMocks.NewManager(s.T())
-	vipManager.EXPECT().Start(mock.Anything).Return(nil)
+	vipManager.EXPECT().Start(mock.Anything).Return()
 	vipManager.EXPECT().Stop().Return()
 	s.vipManagerFactoryFunc = vipMocks.NewManagerFactoryFunc(s.T())
-	s.vipManagerFactoryFunc.EXPECT().Execute(s.clusterNode, watcher, configurator, IFACE).Return(vipManager)
+	s.vipManagerFactoryFunc.EXPECT().Execute(s.clusterNode, ticker, configurator, IFACE).Return(vipManager)
 
 	startCmd := &start{
 		waiter:                      waiter,
 		clusterNodeFactoryFunc:      s.clusterNodeFactoryFunc.Execute,
 		backgroundServerFactoryFunc: s.backgroundServerFactoryFunc.Execute,
 		tickerFactoryFunc:           tickerFactoryFunc.Execute,
-		watcherFactoryFunc:          watcherFactoryFunc.Execute,
 		configuratorFactoryFunc:     configuratorFactoryFunc.Execute,
 		vipManagerFactoryFunc:       s.vipManagerFactoryFunc.Execute,
 	}

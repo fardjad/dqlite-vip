@@ -17,12 +17,12 @@ func (_m *Configurator) EXPECT() *Configurator_Expecter {
 	return &Configurator_Expecter{mock: &_m.Mock}
 }
 
-// AddVIP provides a mock function with given fields: iface, address
-func (_m *Configurator) AddVIP(iface string, address string) error {
+// EnsureVIP provides a mock function with given fields: iface, address
+func (_m *Configurator) EnsureVIP(iface string, address string) error {
 	ret := _m.Called(iface, address)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddVIP")
+		panic("no return value specified for EnsureVIP")
 	}
 
 	var r0 error
@@ -35,31 +35,31 @@ func (_m *Configurator) AddVIP(iface string, address string) error {
 	return r0
 }
 
-// Configurator_AddVIP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddVIP'
-type Configurator_AddVIP_Call struct {
+// Configurator_EnsureVIP_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EnsureVIP'
+type Configurator_EnsureVIP_Call struct {
 	*mock.Call
 }
 
-// AddVIP is a helper method to define mock.On call
+// EnsureVIP is a helper method to define mock.On call
 //   - iface string
 //   - address string
-func (_e *Configurator_Expecter) AddVIP(iface interface{}, address interface{}) *Configurator_AddVIP_Call {
-	return &Configurator_AddVIP_Call{Call: _e.mock.On("AddVIP", iface, address)}
+func (_e *Configurator_Expecter) EnsureVIP(iface interface{}, address interface{}) *Configurator_EnsureVIP_Call {
+	return &Configurator_EnsureVIP_Call{Call: _e.mock.On("EnsureVIP", iface, address)}
 }
 
-func (_c *Configurator_AddVIP_Call) Run(run func(iface string, address string)) *Configurator_AddVIP_Call {
+func (_c *Configurator_EnsureVIP_Call) Run(run func(iface string, address string)) *Configurator_EnsureVIP_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(string), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *Configurator_AddVIP_Call) Return(_a0 error) *Configurator_AddVIP_Call {
+func (_c *Configurator_EnsureVIP_Call) Return(_a0 error) *Configurator_EnsureVIP_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *Configurator_AddVIP_Call) RunAndReturn(run func(string, string) error) *Configurator_AddVIP_Call {
+func (_c *Configurator_EnsureVIP_Call) RunAndReturn(run func(string, string) error) *Configurator_EnsureVIP_Call {
 	_c.Call.Return(run)
 	return _c
 }

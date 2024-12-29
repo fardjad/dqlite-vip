@@ -4,9 +4,9 @@ package vip
 
 import (
 	cluster "fardjad.com/dqlite-vip/cluster"
-	cluster_kv "fardjad.com/dqlite-vip/cluster/cluster_kv"
-
 	mock "github.com/stretchr/testify/mock"
+
+	utils "fardjad.com/dqlite-vip/utils"
 
 	vip "fardjad.com/dqlite-vip/vip"
 )
@@ -25,7 +25,7 @@ func (_m *ManagerFactoryFunc) EXPECT() *ManagerFactoryFunc_Expecter {
 }
 
 // Execute provides a mock function with given fields: _a0, _a1, _a2, _a3
-func (_m *ManagerFactoryFunc) Execute(_a0 cluster.ClusterNode, _a1 cluster_kv.Watcher, _a2 vip.Configurator, _a3 string) vip.Manager {
+func (_m *ManagerFactoryFunc) Execute(_a0 cluster.ClusterNode, _a1 utils.BetterTicker, _a2 vip.Configurator, _a3 string) vip.Manager {
 	ret := _m.Called(_a0, _a1, _a2, _a3)
 
 	if len(ret) == 0 {
@@ -33,7 +33,7 @@ func (_m *ManagerFactoryFunc) Execute(_a0 cluster.ClusterNode, _a1 cluster_kv.Wa
 	}
 
 	var r0 vip.Manager
-	if rf, ok := ret.Get(0).(func(cluster.ClusterNode, cluster_kv.Watcher, vip.Configurator, string) vip.Manager); ok {
+	if rf, ok := ret.Get(0).(func(cluster.ClusterNode, utils.BetterTicker, vip.Configurator, string) vip.Manager); ok {
 		r0 = rf(_a0, _a1, _a2, _a3)
 	} else {
 		if ret.Get(0) != nil {
@@ -51,16 +51,16 @@ type ManagerFactoryFunc_Execute_Call struct {
 
 // Execute is a helper method to define mock.On call
 //   - _a0 cluster.ClusterNode
-//   - _a1 cluster_kv.Watcher
+//   - _a1 utils.BetterTicker
 //   - _a2 vip.Configurator
 //   - _a3 string
 func (_e *ManagerFactoryFunc_Expecter) Execute(_a0 interface{}, _a1 interface{}, _a2 interface{}, _a3 interface{}) *ManagerFactoryFunc_Execute_Call {
 	return &ManagerFactoryFunc_Execute_Call{Call: _e.mock.On("Execute", _a0, _a1, _a2, _a3)}
 }
 
-func (_c *ManagerFactoryFunc_Execute_Call) Run(run func(_a0 cluster.ClusterNode, _a1 cluster_kv.Watcher, _a2 vip.Configurator, _a3 string)) *ManagerFactoryFunc_Execute_Call {
+func (_c *ManagerFactoryFunc_Execute_Call) Run(run func(_a0 cluster.ClusterNode, _a1 utils.BetterTicker, _a2 vip.Configurator, _a3 string)) *ManagerFactoryFunc_Execute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(cluster.ClusterNode), args[1].(cluster_kv.Watcher), args[2].(vip.Configurator), args[3].(string))
+		run(args[0].(cluster.ClusterNode), args[1].(utils.BetterTicker), args[2].(vip.Configurator), args[3].(string))
 	})
 	return _c
 }
@@ -70,7 +70,7 @@ func (_c *ManagerFactoryFunc_Execute_Call) Return(_a0 vip.Manager) *ManagerFacto
 	return _c
 }
 
-func (_c *ManagerFactoryFunc_Execute_Call) RunAndReturn(run func(cluster.ClusterNode, cluster_kv.Watcher, vip.Configurator, string) vip.Manager) *ManagerFactoryFunc_Execute_Call {
+func (_c *ManagerFactoryFunc_Execute_Call) RunAndReturn(run func(cluster.ClusterNode, utils.BetterTicker, vip.Configurator, string) vip.Manager) *ManagerFactoryFunc_Execute_Call {
 	_c.Call.Return(run)
 	return _c
 }

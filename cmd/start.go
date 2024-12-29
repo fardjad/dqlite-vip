@@ -2,23 +2,20 @@ package cmd
 
 import (
 	"context"
+	"time"
 
 	"fardjad.com/dqlite-vip/api"
 	"fardjad.com/dqlite-vip/cluster"
-	"fardjad.com/dqlite-vip/cluster/cluster_kv"
-	"fardjad.com/dqlite-vip/time"
+	"fardjad.com/dqlite-vip/utils"
 	"fardjad.com/dqlite-vip/vip"
 	"github.com/spf13/cobra"
-
-	stdTime "time"
 )
 
 type start struct {
 	waiter                      Waiter
 	clusterNodeFactoryFunc      cluster.ClusterNodeFactoryFunc
 	backgroundServerFactoryFunc api.BackgroundServerFactoryFunc
-	tickerFactoryFunc           time.TickerFactoryFunc
-	watcherFactoryFunc          cluster_kv.WatcherFactoryFunc
+	tickerFactoryFunc           utils.BetterTickerFactoryFunc
 	configuratorFactoryFunc     vip.ConfiguratorFactoryFunc
 	vipManagerFactoryFunc       vip.ManagerFactoryFunc
 
@@ -31,10 +28,9 @@ type start struct {
 }
 
 func (c *start) NewVIPManager(clusterNode cluster.ClusterNode) vip.Manager {
-	ticker := c.tickerFactoryFunc(stdTime.Second)
-	watcher := c.watcherFactoryFunc(clusterNode, ticker)
+	ticker := c.tickerFactoryFunc(time.Second)
 	configurator := c.configuratorFactoryFunc(5)
-	return c.vipManagerFactoryFunc(clusterNode, watcher, configurator, c.iface)
+	return c.vipManagerFactoryFunc(clusterNode, ticker, configurator, c.iface)
 }
 
 func (c *start) runE(cmd *cobra.Command, args []string) error {
@@ -63,10 +59,7 @@ func (c *start) runE(cmd *cobra.Command, args []string) error {
 	defer clusterNode.Close(context.Background())
 
 	vipManager := c.NewVIPManager(clusterNode)
-	err = vipManager.Start(context.Background())
-	if err != nil {
-		return err
-	}
+	vipManager.Start(context.Background())
 	defer vipManager.Stop()
 
 	c.waiter.Wait()
