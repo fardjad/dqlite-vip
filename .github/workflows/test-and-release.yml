@@ -1,0 +1,97 @@
+name: test-and-release
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+ 
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            automake \
+            libtool \
+            gettext \
+            autopoint \
+            tclsh \
+            tcl \
+            libsqlite3-dev \
+            pkg-config \
+            git
+      - name: Install just
+        uses: extractions/setup-just@v2
+      - uses: actions/cache@main
+        id: build-cache
+        with:
+          path: |
+            ./hack/.build
+            ./hack/.deps
+          key: ${{ runner.os }}-build-${{ hashFiles('./hack/env.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+      - name: Setup Go
+        uses: actions/setup-go@main
+        with:
+          go-version: stable
+          check-latest: true
+      - name: Run tests
+        run: just test
+  check-version:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      version_changed: ${{ steps.check_version.outputs.version_changed }}
+      version: ${{ steps.check_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - name: Check version
+        id: check_version
+        run: |
+          FILE_VERSION=$(cat VERSION)
+          FILE_VERSION="${FILE_VERSION#v}"
+
+          TAG_VERSION=$(git describe --tags --abbrev=0 2>&/dev/null || echo "v0.0.0")
+          TAG_VERSION="${TAG_VERSION#v}"
+
+          if [ "$(printf '%s\n' "$TAG_VERSION" "$FILE_VERSION" | sort -V | tail -n1)" = "$FILE_VERSION" ] && [ "$FILE_VERSION" != "$TAG_VERSION" ]; then
+            echo "VERSION in file is greater than the latest tag."
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION is not greater than the latest tag."
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "version=$FILE_VERSION" >> $GITHUB_OUTPUT
+  create-tag:
+    runs-on: ubuntu-latest
+    needs: check-version
+    if: needs.check-version.outputs.version_changed == 'true'
+    steps:
+      - uses: actions/checkout@main
+      - name: Configure Git
+        uses: fardjad/my-actions/configure-git@main
+      - name: Create Git tag
+        run: |
+          TAG="v${{ needs.check-version.outputs.version }}"
+
+          if git rev-parse $TAG >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping..."
+          else
+            git tag -a $TAG -m "Release $TAG"
+            git push origin $TAG
+          fi

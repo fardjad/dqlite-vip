@@ -1,9 +1,9 @@
 package version
 
 // git_version is set by the build script
-var git_version string = "unknown"
-var version string = "0.1.0"
+var gitVersion string = "unknown"
+var staticVersion string = "0.0.0"
 
 func Version() string {
-	return version + " (" + git_version + ")"
+	return staticVersion + " (" + gitVersion + ")"
 }

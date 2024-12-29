@@ -1,3 +1,7 @@
+/.devcontainer
+/.github
+/.idea
+/.vscode
 /bin
-/hack/.deps
 /hack/.build
+/hack/.deps
