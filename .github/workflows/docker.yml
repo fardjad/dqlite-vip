@@ -16,7 +16,7 @@ jobs:
       - name: Read version from file and compare with tag
         id: get_version
         run: |
-          FILE_VERSION=$(cat VERSION)
+          FILE_VERSION=$(cat VERSION.txt)
           FILE_VERSION="${FILE_VERSION#v}"
 
           TAG_VERSION=$(git describe --tags --abbrev=0 || echo "v0.0.0")
