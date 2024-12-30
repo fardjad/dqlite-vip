@@ -33,6 +33,7 @@ RUN go mod download
 COPY hack/ hack/
 RUN ./hack/static-dqlite.sh
 COPY . .
+RUN git clean -fd && git reset --hard
 RUN just build-static
 
 FROM scratch
