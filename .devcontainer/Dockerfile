@@ -1,12 +1,20 @@
 # syntax=docker/dockerfile:1
 
-# For now, brew only works with linux/amd64
-FROM --platform=linux/amd64 ubuntu:noble
+FROM rust:bookworm AS rust-tools
 
-# Install dependencies
+RUN cargo install just
+RUN cargo install viddy
+
+FROM golang:1.23-bookworm AS builder
+
+COPY --from=rust-tools /usr/local/cargo/bin/viddy /usr/local/bin/viddy
+COPY --from=rust-tools /usr/local/cargo/bin/just /usr/local/bin/just
+COPY --from=vektra/mockery:v2 /usr/local/bin/mockery /usr/local/bin/mockery
 
 RUN apt-get update && apt-get install -y \
+  locales \
   software-properties-common \
+  python3-launchpadlib \
   apt-utils \
   build-essential \
   automake \
@@ -24,9 +32,14 @@ RUN apt-get update && apt-get install -y \
   iputils-ping \
   iputils-arping \
   sudo \
-  && rm -rf /var/lib/apt/lists/*
+  tmux \
+  jq \
+  vim \
+  neovim \
+  zsh
 
-RUN sudo locale-gen "en_US.UTF-8" && sudo dpkg-reconfigure locales
+RUN curl -sSLo /usr/local/bin/xpanes https://raw.githubusercontent.com/greymd/tmux-xpanes/v4.2.0/bin/xpanes \
+  && chmod 0755 /usr/local/bin/xpanes
 
 # Configure non-root user
 
@@ -48,152 +61,30 @@ EOF
 RUN bash /delete-default-user.sh && rm /delete-default-user.sh
 
 RUN groupadd --gid $USER_GID $USERNAME \
-  && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+  && useradd -s /usr/bin/zsh --uid $USER_UID --gid $USER_GID -m $USERNAME \
   && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
   && chmod 0440 /etc/sudoers.d/$USERNAME
 USER $USERNAME
 WORKDIR /home/$USERNAME
 ENV HOME=/home/$USERNAME
 
-# Install Homebrew
+# Locale
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US.UTF-8
+ENV LC_CTYPE=en_US.UTF-8
+RUN sudo locale-gen "en_US.UTF-8" && sudo dpkg-reconfigure locales
 
-RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
-  && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" \
-  brew install gcc
+RUN sudo sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+  sudo dpkg-reconfigure --frontend=noninteractive locales
 
-# Dotfiles setup
+RUN mkdir -p $HOME/.zsh/completion
+RUN just --completions=zsh > ${HOME}/.zsh/completion/_just
+COPY --chown=${USER_UID}:${USER_GID} <<EOF /home/${USERNAME}/.zshrc
 
-RUN git clone https://github.com/fardjad/dotfiles.git $HOME/.dotfiles
-COPY <<EOF $HOME/fetch-dotfiles-formulas.sh
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-cd "\$HOME/.dotfiles" || exit 1
-
-brewfiles=\$(find . -name Brewfile -type f -mindepth 2 -maxdepth 2)
-for brewfile in \$brewfiles; do
-    pushd \$(dirname \$brewfile)
-    for formula in \$(brew bundle list); do
-        brew fetch \$formula
-    done
-    popd
-done
-EOF
-RUN bash $HOME/fetch-dotfiles-formulas.sh && sudo rm $HOME/fetch-dotfiles-formulas.sh
-
-COPY <<EOF $HOME/setup-dotfiles.sh
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-directories_to_keep=(
-  "script" # needed for setup
-  "bat"
-  "eza"
-  "golang"
-  "mcfly"
-  "starship"
-  "tldr"
-  "zsh"
-)
-for directory in \$HOME/.dotfiles/*; do
-  dir_name=$(basename "\$directory")
-  if [[ ! " \${directories_to_keep[@]} " =~ " \${dir_name} " ]]; then
-    rm -rf "\$directory"
-  fi
-done
-
-\$HOME/.dotfiles/script/setup
-
-touch ~/.zsh_history # McFly expects this file to exist on startup
-EOF
-RUN bash $HOME/setup-dotfiles.sh && sudo rm $HOME/setup-dotfiles.sh
-
-# Customizations
-
-COPY <<EOF $HOME/setup-just.sh
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-brew install just
-EOF
-RUN bash $HOME/setup-just.sh && sudo rm $HOME/setup-just.sh
-
-COPY <<EOF $HOME/setup-editor.sh
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-brew install vim neovim
-echo "export EDITOR=nvim" >> \$HOME/.localrc
-echo "set clipboard+=unnamedplus" >> \$HOME/.ideavimrc
+mkdir -p \$HOME/.zsh/completion
+fpath=(~/.zsh/completion \$fpath)
+autoload -U compinit
+compinit
 
 EOF
-RUN bash $HOME/setup-editor.sh && sudo rm $HOME/setup-editor.sh
-
-COPY <<EOF $HOME/setup-starship.sh
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-# IntelliJ terminal doesn't like non-plain-text symbols
-starship preset plain-text-symbols > \$HOME/.starship/config.toml
-printf "\\n[container]\\ndisabled = true\\n" >> \$HOME/.starship/config.toml
-EOF
-RUN bash $HOME/setup-starship.sh && sudo rm $HOME/setup-starship.sh
-
-COPY <<EOF $HOME/setup-tmux-xpanes.sh
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-brew install tmux-xpanes
-EOF
-RUN bash $HOME/setup-tmux-xpanes.sh && sudo rm $HOME/setup-tmux-xpanes.sh
-
-COPY <<EOF $HOME/setup-viddy.sh
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-brew install viddy
-EOF
-RUN bash $HOME/setup-viddy.sh && sudo rm $HOME/setup-viddy.sh
-
-COPY <<EOF $HOME/setup-jq.sh
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-brew install jq
-EOF
-RUN bash $HOME/setup-jq.sh && sudo rm $HOME/setup-jq.sh
-
-COPY <<EOF $HOME/setup-mockery.sh
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-brew install mockery
-EOF
-RUN bash $HOME/setup-mockery.sh && sudo rm $HOME/setup-mockery.sh

@@ -22,17 +22,14 @@
     "vscode": {
       "extensions": [
         "golang.go",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-docker"
       ]
     }
   },
   "containerUser": "dev",
   "remoteUser": "dev",
-  "containerEnv": {
-    "SHELL": "/home/linuxbrew/.linuxbrew/bin/zsh"
-  },
   "runArgs": [
-    "--platform=linux/amd64",
     "--name",
     "dqlite-vip-devcontainer",
     "--network",

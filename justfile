@@ -178,7 +178,7 @@ run-cluster-xpanes:
     sudo rm -rf /tmp/dqlite-vip
     
     just build-static > /dev/null
-
+    
     history -c
     CMD1="sudo ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/1 --bind-cluster 127.0.0.1:8001 --bind-http 127.0.0.1:9901 --iface dummy01"
     CMD2="sudo ./bin/static/dqlite-vip start --data-dir /tmp/dqlite-vip/2 --bind-cluster 127.0.0.1:8002 --bind-http 127.0.0.1:9902 --join 127.0.0.1:8001 --iface dummy02"
