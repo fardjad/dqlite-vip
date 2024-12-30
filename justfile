@@ -21,8 +21,7 @@ generate-mocks:
     eval $(go env)
 
     rm -rf mocks
-    go install github.com/vektra/mockery/v2
-    "${GOPATH}/bin/mockery" --all
+    mockery --all
     go mod tidy
      
 [private]

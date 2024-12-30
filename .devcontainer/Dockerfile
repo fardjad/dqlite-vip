@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
-FROM ubuntu:noble
+# For now, brew only works with linux/amd64
+FROM --platform=linux/amd64 ubuntu:noble
 
 # Install dependencies
 
@@ -185,3 +186,14 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 brew install jq
 EOF
 RUN bash $HOME/setup-jq.sh && sudo rm $HOME/setup-jq.sh
+
+COPY <<EOF $HOME/setup-mockery.sh
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+brew install mockery
+EOF
+RUN bash $HOME/setup-mockery.sh && sudo rm $HOME/setup-mockery.sh

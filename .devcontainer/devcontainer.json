@@ -32,6 +32,7 @@
     "SHELL": "/home/linuxbrew/.linuxbrew/bin/zsh"
   },
   "runArgs": [
+    "--platform=linux/amd64",
     "--name",
     "dqlite-vip-devcontainer",
     "--network",
