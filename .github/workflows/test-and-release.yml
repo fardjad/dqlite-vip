@@ -98,3 +98,74 @@ jobs:
             git tag -a $TAG -m "Release $TAG"
             git push origin $TAG
           fi
+  build-binaries:
+    strategy:
+      matrix:
+        runner: 
+          - ubuntu-latest
+          - ubicloud-standard-2-arm
+      fail-fast: true
+    runs-on: ${{ matrix.runner }}
+    needs: 
+      - create-tag
+      - check-version
+    steps:
+      - uses: actions/checkout@main
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            automake \
+            libtool \
+            gettext \
+            autopoint \
+            tclsh \
+            tcl \
+            libsqlite3-dev \
+            pkg-config \
+            git
+      - name: Install just
+        uses: extractions/setup-just@v2
+      - uses: actions/cache@main
+        id: build-cache
+        with:
+          path: |
+            ./hack/.build
+            ./hack/.deps
+          key: ${{ runner.os }}-build-${{ hashFiles('./hack/env.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+      - name: Setup Go
+        uses: actions/setup-go@main
+        with:
+          go-version: stable
+          check-latest: true
+      - name: Build
+        run: |
+          just build-static
+          BIN_NAME="dqlite-vip-${{ needs.check-version.outputs.version }}-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
+          mv ./bin/static/dqlite-vip ./bin/static/$BIN_NAME
+      - name: Upload Binary
+        uses: actions/upload-artifact@main
+        with:
+          name: artifacts-${{ matrix.runner }}
+          path: ./bin/static/
+  release:
+    needs:
+      - build-binaries
+      - check-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Download all artifacts
+        uses: actions/download-artifact@main
+        with:
+          path: artifacts
+          pattern: artifacts-*
+          merge-multiple: true
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          TAG: "v${{ needs.check-version.outputs.version }}"
+        run: gh release create "${TAG}" --generate-notes ./artifacts/*
