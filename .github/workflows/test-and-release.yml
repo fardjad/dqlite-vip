@@ -65,7 +65,7 @@ jobs:
           FILE_VERSION=$(cat VERSION.txt)
           FILE_VERSION="${FILE_VERSION#v}"
 
-          TAG_VERSION=$(git describe --tags --abbrev=0 2>&/dev/null || echo "v0.0.0")
+          TAG_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           TAG_VERSION="${TAG_VERSION#v}"
 
           if [ "$(printf '%s\n' "$TAG_VERSION" "$FILE_VERSION" | sort -V | tail -n1)" = "$FILE_VERSION" ] && [ "$FILE_VERSION" != "$TAG_VERSION" ]; then
@@ -94,6 +94,7 @@ jobs:
 
           if git rev-parse $TAG >/dev/null 2>&1; then
             echo "Tag $TAG already exists, skipping..."
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
           else
             git tag -a $TAG -m "Release $TAG"
             git push origin $TAG
@@ -109,6 +110,7 @@ jobs:
     needs: 
       - create-tag
       - check-version
+    if: needs.check-version.outputs.version_changed == 'true'
     steps:
       - uses: actions/checkout@main
       - name: Install dependencies
