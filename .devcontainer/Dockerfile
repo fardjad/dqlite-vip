@@ -73,8 +73,6 @@ ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 ENV LC_CTYPE=en_US.UTF-8
-RUN sudo locale-gen "en_US.UTF-8" && sudo dpkg-reconfigure locales
-
 RUN sudo sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
   sudo dpkg-reconfigure --frontend=noninteractive locales
 
