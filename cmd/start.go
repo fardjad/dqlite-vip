@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"fardjad.com/dqlite-vip/api"
@@ -56,7 +57,13 @@ func (c *start) runE(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer clusterNode.Close(context.Background())
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := clusterNode.Close(ctx); err != nil {
+			log.Printf("Failed to close cluster node: %v", err)
+		}
+	}()
 
 	vipManager := c.NewVIPManager(clusterNode)
 	vipManager.Start(context.Background())

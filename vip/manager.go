@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"time"
 
 	"fardjad.com/dqlite-vip/cluster"
 	"fardjad.com/dqlite-vip/utils"
@@ -71,14 +72,18 @@ func (m *manager) Start(ctx context.Context) {
 		for {
 			select {
 			case <-m.ticker.C():
-				m.isLeader = m.clusterNode.IsLeader(ctx)
+				func() {
+					// TODO: make the timeout configurable
+					ctx, cancelFunc := context.WithTimeout(ctx, 5*time.Second)
+					defer cancelFunc()
+					m.isLeader = m.clusterNode.IsLeader(ctx)
+				}()
 
 				newVIP, err := m.readVIP()
 				if err != nil {
 					log.Println("failed to read VIP from the database:", err)
 					continue
 				}
-
 				vipChanged := m.vip != newVIP
 				switch {
 				case m.isLeader && vipChanged:
@@ -89,7 +94,6 @@ func (m *manager) Start(ctx context.Context) {
 				default:
 					m.removeVIPs([]string{m.vip, newVIP})
 				}
-
 				m.vip = newVIP
 			case <-ctx.Done():
 				m.ticker.Stop()

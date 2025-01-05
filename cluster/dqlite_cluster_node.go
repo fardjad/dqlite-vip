@@ -2,10 +2,11 @@ package cluster
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/canonical/go-dqlite/v2/app"
 )
@@ -20,7 +21,6 @@ func NewDqliteClusterNode(dataDir string, bindCluster string, join []string) (Cl
 
 type DqliteClusterNode struct {
 	app *app.App
-	db  *sql.DB
 
 	dataDir     string
 	bindCluster string
@@ -42,6 +42,7 @@ func (n *DqliteClusterNode) Start(ctx context.Context) error {
 	}
 
 	db, err := app.Open(ctx, "db")
+	defer db.Close()
 	if err != nil {
 		return err
 	}
@@ -52,20 +53,31 @@ func (n *DqliteClusterNode) Start(ctx context.Context) error {
 
 	log.Printf("Dqlite node is listening on %s", n.bindCluster)
 
-	n.db = db
 	n.app = app
 	return nil
 }
 
 func (n *DqliteClusterNode) Ready(ctx context.Context) error {
+	if n.app == nil {
+		return errors.New("node not started")
+	}
+
 	return n.app.Ready(ctx)
 }
 
 func (n *DqliteClusterNode) ID() uint64 {
+	if n.app == nil {
+		return 0
+	}
+
 	return n.app.ID()
 }
 
 func (n *DqliteClusterNode) LeaderID(ctx context.Context) (uint64, error) {
+	if n.app == nil {
+		return 0, errors.New("node not started")
+	}
+
 	client, err := n.app.FindLeader(ctx)
 	if err != nil {
 		return 0, err
@@ -80,6 +92,10 @@ func (n *DqliteClusterNode) LeaderID(ctx context.Context) (uint64, error) {
 }
 
 func (n *DqliteClusterNode) IsLeader(ctx context.Context) bool {
+	if n.app == nil {
+		return false
+	}
+
 	leaderID, err := n.LeaderID(ctx)
 	if err != nil {
 		return false
@@ -89,6 +105,10 @@ func (n *DqliteClusterNode) IsLeader(ctx context.Context) bool {
 }
 
 func (n *DqliteClusterNode) ClusterMembers(ctx context.Context) ([]*ClusterMemberInfo, error) {
+	if n.app == nil {
+		return nil, errors.New("node not started")
+	}
+
 	client, err := n.app.Leader(ctx)
 	if err != nil {
 		return nil, err
@@ -111,12 +131,11 @@ func (n *DqliteClusterNode) ClusterMembers(ctx context.Context) ([]*ClusterMembe
 }
 
 func (n *DqliteClusterNode) Close(ctx context.Context) error {
-	err := n.db.Close()
-	if err != nil {
-		log.Println("Failed to close database:", err)
+	if n.app == nil {
+		return errors.New("node not started")
 	}
 
-	err = n.app.Handover(ctx)
+	err := n.app.Handover(ctx)
 	if err != nil {
 		log.Println("Failed to handover leadership:", err)
 	}
@@ -125,18 +144,42 @@ func (n *DqliteClusterNode) Close(ctx context.Context) error {
 }
 
 func (n *DqliteClusterNode) SetString(key string, value string) error {
-	_, err := n.db.Exec("INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)", key, value)
+	if n.app == nil {
+		return errors.New("node not started")
+	}
+
+	// FIXME
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	db, err := n.app.Open(ctx, "db")
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	_, err = db.Exec("INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)", key, value)
 	return err
 }
 
 func (n *DqliteClusterNode) GetString(key string) (string, error) {
-	row := n.db.QueryRow("SELECT value FROM kv WHERE key = ?", key)
+	if n.app == nil {
+		return "", errors.New("node not started")
+	}
+
+	// FIXME
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	db, err := n.app.Open(ctx, "db")
+	if err != nil {
+		return "", err
+	}
+	defer db.Close()
+	row := db.QueryRow("SELECT value FROM kv WHERE key = ?", key)
 	if row.Err() != nil {
 		return "", row.Err()
 	}
 
 	var value string
-	err := row.Scan(&value)
+	err = row.Scan(&value)
 	if err != nil {
 		return "", err
 	}
