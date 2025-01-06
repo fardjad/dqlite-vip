@@ -171,3 +171,62 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           TAG: "v${{ needs.check-version.outputs.version }}"
         run: gh release create "${TAG}" --generate-notes ./artifacts/*
+  docker-build-and-push:
+    needs:
+      - build-binaries
+      - check-version
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      packages: write
+      contents: read
+      attestations: write
+    env:
+      REGISTRY: index.docker.io
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/dqlite-vip
+      TAG: ${{ needs.check-version.outputs.version }}
+    steps:
+      - name: Set up Docker
+        uses: docker/setup-docker-action@master
+        with:
+          daemon-config: |
+            {
+              "debug": true,
+              "features": {
+                "containerd-snapshotter": true
+              }
+            }      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@master
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@master
+      - name: Login to Docker Hub
+        uses: docker/login-action@master
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: actions/checkout@main
+      - name: Download all artifacts
+        uses: actions/download-artifact@main
+        with:
+          path: artifacts
+          pattern: artifacts-*
+          merge-multiple: true
+      - name: Build and push image
+        id: push
+        uses: docker/build-push-action@master
+        with:
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=registry,ref=${{ env.IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max
+          context: .
+          file: .github/Dockerfile
+          push: true
+          tags: "${{ env.IMAGE }}:${{ env.TAG }},${{ env.IMAGE }}:latest"
+      - name: Attest
+        uses: actions/attest-build-provenance@main
+        id: attest
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true

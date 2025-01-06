@@ -4,9 +4,6 @@ static_version := `cat VERSION.txt`
 git_version := `git describe --match="" --always --dirty --abbrev=10`
 version_ldflags := "-X 'fardjad.com/dqlite-vip/version.gitVersion=" + git_version + "' -X 'fardjad.com/dqlite-vip/version.staticVersion=" + static_version + "'"
 
-base_docker_image_name := "dqlite-vip-base"
-static_docker_image_name := "dqlite-vip-static"
-
 [doc("Show this message")]
 help:
     just --list
