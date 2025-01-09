@@ -17,8 +17,8 @@ type ClusterNode interface {
 	ClusterMembers(ctx context.Context) ([]*ClusterMemberInfo, error)
 	Close(ctx context.Context) error
 
-	SetString(key string, value string) error
-	GetString(key string) (string, error)
+	SetString(ctx context.Context, key string, value string) error
+	GetString(ctx context.Context, key string) (string, error)
 }
 
 type ClusterNodeFactoryFunc func(dataDir string, bindCluster string, join []string) (ClusterNode, error)

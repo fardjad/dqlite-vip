@@ -74,17 +74,19 @@ func (s *DqliteClusterSuite) TestKeyValueOperations() {
 	key := "test-key"
 	value := "test-value"
 
-	s.Require().NoError(s.node1.SetString(key, value))
+	s.ctx, s.cancel = context.WithTimeout(context.Background(), 10*time.Second)
 
-	result, err := s.node1.GetString(key)
+	s.Require().NoError(s.node1.SetString(s.ctx, key, value))
+
+	result, err := s.node1.GetString(s.ctx, key)
 	s.Require().NoError(err)
 	s.Equal(value, result)
 
-	result, err = s.node2.GetString(key)
+	result, err = s.node2.GetString(s.ctx, key)
 	s.Require().NoError(err)
 	s.Equal(value, result)
 
-	result, err = s.node3.GetString(key)
+	result, err = s.node3.GetString(s.ctx, key)
 	s.Require().NoError(err)
 	s.Equal(value, result)
 }

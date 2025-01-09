@@ -12,10 +12,12 @@ import (
 
 // Implements [Manager]
 type manager struct {
-	clusterNode  cluster.ClusterNode
-	ticker       utils.BetterTicker
-	configurator Configurator
-	iface        string
+	clusterNode       cluster.ClusterNode
+	ticker            utils.BetterTicker
+	configurator      Configurator
+	iface             string
+	dbAccessTimeout   time.Duration
+	findLeaderTimeout time.Duration
 
 	// after start
 	vip        string
@@ -23,8 +25,11 @@ type manager struct {
 	cancelFunc context.CancelFunc
 }
 
-func (m *manager) readVIP() (string, error) {
-	val, err := m.clusterNode.GetString("vip")
+func (m *manager) readVIP(ctx context.Context) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, m.dbAccessTimeout)
+	defer cancel()
+
+	val, err := m.clusterNode.GetString(ctx, "vip")
 
 	if err == sql.ErrNoRows {
 		return "", nil
@@ -65,21 +70,24 @@ func (m *manager) ensureVIP(vip string) {
 }
 
 func (m *manager) Start(ctx context.Context) {
-	ctx, cancelFunc := context.WithCancel(ctx)
-	m.cancelFunc = cancelFunc
+	ctx, cancel := context.WithCancel(ctx)
+	m.cancelFunc = cancel
 
 	go func() {
 		for {
 			select {
 			case <-m.ticker.C():
-				func() {
-					// TODO: make the timeout configurable
-					ctx, cancelFunc := context.WithTimeout(ctx, 5*time.Second)
-					defer cancelFunc()
-					m.isLeader = m.clusterNode.IsLeader(ctx)
+				m.isLeader = func() bool {
+					ctx, cancel := context.WithTimeout(ctx, m.findLeaderTimeout)
+					defer cancel()
+					return m.clusterNode.IsLeader(ctx)
 				}()
 
-				newVIP, err := m.readVIP()
+				newVIP, err := func() (string, error) {
+					ctx, cancel := context.WithTimeout(ctx, m.dbAccessTimeout)
+					defer cancel()
+					return m.readVIP(ctx)
+				}()
 				if err != nil {
 					log.Println("failed to read VIP from the database:", err)
 					continue
@@ -115,5 +123,8 @@ func NewManager(clusterNode cluster.ClusterNode, ticker utils.BetterTicker, conf
 		ticker:       ticker,
 		configurator: configurator,
 		iface:        iface,
+		// TODO: make these configurable
+		dbAccessTimeout:   10 * time.Second,
+		findLeaderTimeout: 5 * time.Second,
 	}
 }

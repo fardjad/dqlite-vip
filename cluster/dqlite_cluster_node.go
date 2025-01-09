@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/canonical/go-dqlite/v2/app"
 )
@@ -143,14 +142,11 @@ func (n *DqliteClusterNode) Close(ctx context.Context) error {
 	return n.app.Close()
 }
 
-func (n *DqliteClusterNode) SetString(key string, value string) error {
+func (n *DqliteClusterNode) SetString(ctx context.Context, key string, value string) error {
 	if n.app == nil {
 		return errors.New("node not started")
 	}
 
-	// FIXME
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	db, err := n.app.Open(ctx, "db")
 	if err != nil {
 		return err
@@ -160,14 +156,11 @@ func (n *DqliteClusterNode) SetString(key string, value string) error {
 	return err
 }
 
-func (n *DqliteClusterNode) GetString(key string) (string, error) {
+func (n *DqliteClusterNode) GetString(ctx context.Context, key string) (string, error) {
 	if n.app == nil {
 		return "", errors.New("node not started")
 	}
 
-	// FIXME
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	db, err := n.app.Open(ctx, "db")
 	if err != nil {
 		return "", err

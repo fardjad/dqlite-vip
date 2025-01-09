@@ -97,12 +97,12 @@ build-test-debug *args: build-debug
     
 [group("test")]
 [doc("Run the tests")]
-test:
+test *args:
     #!/usr/bin/env bash
 
     set -euo pipefail
 
-    just dynamic-go test ./...
+    just dynamic-go test -timeout 10s {{ args }} ./...
 
 [group("debug")]
 dlv bin:

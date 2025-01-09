@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
 	clusterMocks "fardjad.com/dqlite-vip/mocks/cluster"
@@ -25,7 +26,7 @@ func (s *GetVIPTestSuite) SetupTest() {
 }
 
 func (s *GetVIPTestSuite) TestGetVIP() {
-	s.clusterNode.EXPECT().GetString("vip").Return("192.168.1.100", nil)
+	s.clusterNode.EXPECT().GetString(mock.Anything, "vip").Return("192.168.1.100", nil)
 
 	request, _ := http.NewRequest(http.MethodGet, "/vip", nil)
 	response := httptest.NewRecorder()

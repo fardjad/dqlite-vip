@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
 	clusterMocks "fardjad.com/dqlite-vip/mocks/cluster"
@@ -26,7 +27,7 @@ func (s *SetVIPTestSuite) SetupTest() {
 }
 
 func (s *SetVIPTestSuite) TestSetVIP() {
-	s.clusterNode.EXPECT().SetString("vip", "192.168.1.100").Return(nil)
+	s.clusterNode.EXPECT().SetString(mock.Anything, "vip", "192.168.1.100").Return(nil)
 
 	requestBody, _ := json.Marshal(&SetVIPRequestBody{
 		VIP: "192.168.1.100",

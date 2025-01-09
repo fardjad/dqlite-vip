@@ -9,7 +9,7 @@ type GetVIPResponseBody struct {
 }
 
 func (s *Handlers) GetVIP(w http.ResponseWriter, r *http.Request) {
-	vip, err := s.clusterNode.GetString("vip")
+	vip, err := s.clusterNode.GetString(r.Context(), "vip")
 	if err != nil {
 		s.writeErrorJSON(w, http.StatusInternalServerError, err)
 		return

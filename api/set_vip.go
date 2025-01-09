@@ -21,7 +21,7 @@ func (s *Handlers) SetVIP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.clusterNode.SetString("vip", requestBody.VIP)
+	err = s.clusterNode.SetString(r.Context(), "vip", requestBody.VIP)
 	if err != nil {
 		s.writeErrorJSON(w, http.StatusInternalServerError, err)
 		return

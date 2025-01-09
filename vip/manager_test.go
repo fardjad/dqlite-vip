@@ -44,7 +44,7 @@ func (s *ManagerTestSuite) TestManager() {
 		return true
 	}).Once()
 	wg.Add(1)
-	s.clusterNode.EXPECT().GetString("vip").RunAndReturn(func(_ string) (string, error) {
+	s.clusterNode.EXPECT().GetString(mock.Anything, "vip").RunAndReturn(func(_ context.Context, _ string) (string, error) {
 		wg.Done()
 		return "", nil
 	}).Once()
@@ -58,7 +58,7 @@ func (s *ManagerTestSuite) TestManager() {
 		return true
 	}).Once()
 	wg.Add(1)
-	s.clusterNode.EXPECT().GetString("vip").RunAndReturn(func(_ string) (string, error) {
+	s.clusterNode.EXPECT().GetString(mock.Anything, "vip").RunAndReturn(func(_ context.Context, _ string) (string, error) {
 		wg.Done()
 		return "192.168.1.100/24", nil
 	}).Once()
@@ -77,7 +77,7 @@ func (s *ManagerTestSuite) TestManager() {
 		return true
 	}).Once()
 	wg.Add(1)
-	s.clusterNode.EXPECT().GetString("vip").RunAndReturn(func(_ string) (string, error) {
+	s.clusterNode.EXPECT().GetString(mock.Anything, "vip").RunAndReturn(func(_ context.Context, _ string) (string, error) {
 		wg.Done()
 		return "192.168.1.101/24", nil
 	}).Once()
@@ -101,7 +101,7 @@ func (s *ManagerTestSuite) TestManager() {
 		return false
 	}).Once()
 	wg.Add(1)
-	s.clusterNode.EXPECT().GetString("vip").RunAndReturn(func(_ string) (string, error) {
+	s.clusterNode.EXPECT().GetString(mock.Anything, "vip").RunAndReturn(func(_ context.Context, _ string) (string, error) {
 		wg.Done()
 		return "192.168.1.101/24", nil
 	}).Once()
