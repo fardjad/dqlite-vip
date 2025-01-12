@@ -57,6 +57,27 @@ the ARP tables of the other machines in the network:
 3. `CAP_NET_ADMIN` and `CAP_NET_RAW` capabilities are required to run the
    program.
 
+## Additional Considerations
+
+1. The network interface that the `cluster-bind` address is configured on should
+   keep the same IP address while the program is running even when the interface
+   goes down temporarily.
+
+   > [!NOTE]
+   > It's highly recommended to use a static IP address for the network
+   > interface.
+
+   > [!TIP]
+   > For [netplan](https://netplan.readthedocs.io/en/stable/netplan-yaml), the
+   > `ignore-carrier` option can be used to prevent the interface from losing
+   > its IP address when the carrier is lost.
+
+   If the interface loses its IP address temporarily, the program won't be able
+   to recover until it's restarted.
+
+2. To change the IP addresses of nodes in an existing cluster or to remove
+   nodes, you must recreate the cluster and use a clean data directory.
+
 ## Quick Start
 
 To start a dqlite-vip cluster, you need to run the program on each node in the
@@ -113,6 +134,7 @@ of the cluster and configure the virtual IP.
 Get the status of the cluster (run on any node):
 
 ```bash
+# assuming you have curl and jq installed
 curl http://localhost:9900/status | jq
 ```
 
