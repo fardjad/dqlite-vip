@@ -1,25 +1,20 @@
 # dqlite-vip
 
-**Dqlite-vip** is a small, self-contained program designed to create a highly
-available cluster of Linux machines within a local network, without imposing
-specific requirements on the software running on the nodes.
+**Dqlite-vip** is a lightweight and standalone program for creating a highly
+available cluster of Linux machines on a local network. Its primary function is
+to assign a configurable virtual IP address to one of the machines in the
+cluster (i.e., the cluster leader) and to automatically transfer the virtual IP
+to another machine in case the current leader fails.
 
-The program’s primary function is to assign a configurable virtual IP address to
-one of the machines in the cluster (i.e., the elected leader) and to
-automatically transfer the virtual IP to another machine if/when the current
-leader fails.
-
-As its name suggests, dqlite-vip is built on [Dqlite](https://dqlite.io/), an
+As the name suggests, dqlite-vip is built on [Dqlite](https://dqlite.io/), an
 embeddable, and highly available data store powered by the Raft consensus
 algorithm.
 
 ## Architecture
 
-A typical dqlite-vip cluster consists of 3, 5, or 7 nodes. Because dqlite-vip is
-built on Dqlite, which implements the Raft consensus algorithm, all best
-practices and considerations for Raft also apply to dqlite-vip.
-
-To point out a few of the most important ones:
+A typical dqlite-vip cluster consists of 3, 5, or 7 nodes. Since it is built on
+Dqlite, which uses the Raft consensus algorithm, all Raft best practices and
+considerations apply to dqlite-vip too. Key considerations include:
 
 1. For the cluster to remain operational, the majority of its nodes must be
    available. The majority is defined as `(n/2) + 1`, where `n` is the number of
@@ -30,24 +25,23 @@ To point out a few of the most important ones:
 3. Clusters with more than 7 nodes are not recommended due to the additional
    overhead of determining cluster membership and quorum
 
-Once the cluster is up and running, the leader node will hold the virtual IP and
-will be responsible for broadcasting
-[Gratuitous ARP](https://wiki.wireshark.org/Gratuitous_ARP) packets to update
-the ARP tables of the other machines in the network:
+Once the cluster is up and running, the leader node holds the virtual IP and
+broadcasts [Gratuitous ARP](https://wiki.wireshark.org/Gratuitous_ARP) packets
+to update the ARP tables of other machines in the network:
 
 ![dqlite-vip-cluster](./media/dqlite-vip-cluster.excalidraw.png)
 
 **dqlite-vip** has 4 main components:
 
-- **CLI**: A command-line interface to start the program and configure the
+- **CLI**: A command-line interface (CLI) to start the program and configure the
   static parameters (e.g., data directory, network interface, etc.).
 - **Cluster**: dqlite-vip manages a cluster of Dqlite nodes. The node that is
   elected as the leader will hold the virtual IP address.
 - **API**: A REST API that can be used to monitor the status of the cluster and
   configure the virtual IP.
-- **VIP**: The VIP component is responsible for assigning the configured virtual
-  IP address to a network interface on the leader node and for broadcasting
-  Gratuitous ARP packets to update other machines' ARP table.
+- **VIP**: The VIP component assigns the configured virtual IP address to the
+  leader node's network interface and broadcasts Gratuitous ARP packets to
+  update the ARP tables of other machines in the network.
 
 ## Requirements
 
@@ -59,9 +53,9 @@ the ARP tables of the other machines in the network:
 
 ## Additional Considerations
 
-1. The network interface that the `cluster-bind` address is configured on should
-   keep the same IP address while the program is running even when the interface
-   goes down temporarily.
+1. The network interface configured with the `cluster-bind` address must retain
+   its IP address throughout the program's runtime, even during temporary
+   interface downtime.
 
    > [!NOTE]
    > It's highly recommended to use a static IP address for the network
@@ -98,9 +92,9 @@ sudo install -Dm755 $DQLITE_VIP_BINARY /usr/local/bin/dqlite-vip
 You can then start the program on the first machine with the following command:
 
 ```bash
-DATA_DIR=/path/to/data-dir # replace with the path to the data directory (e.g., `/opt/dqlite-vip/data`)
-NODE_IP="1.2.3.4" # replace with the node's IP address
-IFACE="eth0" # replace with the network interface to use for the VIP
+DATA_DIR=/path/to/data-dir # replace this with the path to the data directory (e.g., /opt/dqlite-vip/data)
+NODE_IP="1.2.3.4" # replace this with the node's IP address
+IFACE="eth0" # replace this with the network interface to use for the VIP
 
 dqlite-vip start \
   --data-dir "${DATA_DIR}" \
@@ -109,12 +103,11 @@ dqlite-vip start \
   --iface "${IFACE}"
 ```
 
-On the other machines, you can start the program with the same command, but you
-need to provide the address of the first machine (or another machine that's
-already part of the cluster) with the `--join` flag:
+For additional machines, use the same command but include the `--join` flag to
+specify the address of an existing cluster node:
 
 ```bash
-JOIN_IP="1.2.3.4" # replace with the IP address of another node in the cluster
+JOIN_IP="1.2.3.4" # replace this with the IP address of another node in the cluster
 
 dqlite-vip start \
   --data-dir "${DATA_DIR}" \
@@ -131,14 +124,14 @@ dqlite-vip start \
 Once all nodes are up and running, you can use the REST API to monitor the state
 of the cluster and configure the virtual IP.
 
-Get the status of the cluster (run on any node):
+Retrieve the cluster status (run this on any node):
 
 ```bash
 # assuming you have curl and jq installed
 curl http://localhost:9900/status | jq
 ```
 
-Configure the virtual IP (run on any node):
+Configure the virtual IP (run this on any node):
 
 ```bash
 VIP="1.2.3.5" # replace with the virtual IP address
