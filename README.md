@@ -148,3 +148,54 @@ You can then ping the virtual IP from any machine in the network:
 ```bash
 ping -c 1 ${VIP}
 ```
+
+## Running in Containers
+
+Pre-built container images with dqlite-vip binary as their entrypoint are
+available on [Docker Hub](https://hub.docker.com/r/fardjad/dqlite-vip).
+
+Below is an example `docker-compose.yml` file:
+
+```yaml
+# docker-compose.yml
+services:
+   dqlite-vip:
+      network_mode: host
+      image: fardjad/dqlite-vip:latest # or a specific version
+      container_name: dqlite-vip
+      restart: unless-stopped
+      volumes:
+         - dqlite-data:/dqlite-data
+      command: start --data-dir=/dqlite-data --bind-cluster=${IP_ADDRESS:?err}:8800 --bind-http=0.0.0.0:9900 --iface=${IFACE:?err} ${JOIN_ARGS:-}
+      cap_add:
+         - NET_ADMIN
+         - NET_RAW
+volumes:
+  dqlite-data: {}
+```
+
+With that `docker-compose.yml` file, you can define the required environment
+variables (`IP_ADDRESS`, `IFACE`, and `JOIN_ARGS`) in a `.env` file located in
+the same directory as your `docker-compose.yml` file. Here's an example:
+
+```text
+# .env
+
+IP_ADDRESS=1.2.3.4 # replace this with the node's IP address
+IFACE=eth0 # replace this with the network interface to use for the VIP
+
+# Uncomment the following line for additional nodes to join an existing cluster
+#JOIN_ARGS="--join=1.2.3.4:8800"
+```
+
+To bring up the cluster, run:
+
+```bash
+docker compose up -d
+```
+
+## Development
+
+If you're interested in building or hacking on **dqlite-vip**, see the
+[CONTRIBUTING.md](CONTRIBUTING.md) file for detailed instructions on setting up
+a development environment and working with the codebase.
